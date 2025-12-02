@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Login — Sistema de Checklists</title>
+
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background: #f5f5f5;
+        font-family: Arial, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+    }
+
+    #login-box {
+        background: #ffffff;
+        padding: 28px;
+        width: 320px;
+        border-radius: 14px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        text-align: center;
+    }
+
+    h2 {
+        margin: 0 0 18px 0;
+        font-size: 20px;
+        color: #0078ff;
+        font-weight: 700;
+    }
+
+    input {
+        width: 100%;
+        padding: 12px;
+        margin-top: 10px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 15px;
+        outline: none;
+    }
+
+    button {
+        width: 100%;
+        padding: 12px;
+        margin-top: 16px;
+        background: #0078ff;
+        border: none;
+        color: #fff;
+        font-size: 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 700;
+        transition: 0.2s;
+    }
+
+    button:hover {
+        background: #005fcc;
+    }
+
+    #erro {
+        margin-top: 12px;
+        color: red;
+        font-size: 14px;
+        display: none;
+    }
+</style>
+</head>
+
+<body>
+
+<div id="login-box">
+    <h2>Login do Checklist</h2>
+
+    <input type="password" id="senha" placeholder="Digite a senha..." />
+
+    <button onclick="logar()">Entrar</button>
+
+    <div id="erro">Senha incorreta.</div>
+</div>
+
+<script>
+function logar() {
+    const senhaDigitada = document.getElementById("senha").value;
+    const senhaCorreta = "checklist.RSS3";
+
+    if (senhaDigitada === senhaCorreta) {
+        // Salva no localStorage que está autenticado
+        localStorage.setItem("auth", "true");
+
+        // Redireciona para admin.html
+        window.location.href = "admin.html";
+    } else {
+        document.getElementById("erro").style.display = "block";
+    }
+}
+
+// Impede que alguém acesse admin.html direto sem login
+if (window.location.pathname.includes("index.html")) {
+    localStorage.removeItem("auth");
+}
+</script>
+
+</body>
+</html>
