@@ -109,7 +109,7 @@ footer{
     <button id="themeToggle">🌙</button>
 
     <nav id="mainNav">
-      <a id="adminLink" href="index.html">Administrador</a>
+      <a id="adminLink" href="admin.html">Administrador</a>
       <a href="excluidos.html">Excluídos</a>
     </nav>
   </div>
@@ -151,7 +151,7 @@ toggle.onclick=()=>{
 document.getElementById('adminLink').addEventListener('click', function(e){
   e.preventDefault();
   localStorage.setItem('auth','true');
-  window.location.href = 'index.html';
+  window.location.href = 'admin.html';
 });
 
 /* === FUNÇÃO PARA OBTER DADOS DO LOCALSTORAGE === */
