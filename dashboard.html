@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard - Checklists</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root {
+  --primary:#0078ff;
+  --accent:#00b4ff;
+  --bg:#f5f8fb;
+  --white:#ffffff;
+  --text:#1a1a1a;
+  --muted:#666;
+  --card:#ffffff;
+  --border:#e3e6eb;
+  --shadow:0 8px 28px rgba(0,0,0,0.08);
+}
+.dark {
+  --bg:#0f1419;
+  --white:#1b2128;
+  --card:#1e252d;
+  --text:#e9eef5;
+  --muted:#a7b0bc;
+  --border:#2b3139;
+  --shadow:0 4px 16px rgba(0,0,0,0.6);
+}
+*{box-sizing:border-box;font-family:"Inter",sans-serif;transition:all .25s ease;}
+body{margin:0;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100vh;}
+
+header{
+  backdrop-filter:blur(14px);
+  background:rgba(255,255,255,0.85);
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 26px;position:sticky;top:0;z-index:10;
+  border-bottom:2px solid rgba(0,120,255,0.08);
+}
+.dark header{
+  background:rgba(30,36,44,0.9);
+  border-bottom:2px solid rgba(0,120,255,0.15);
+}
+h1{font-family:"Outfit";font-weight:800;font-size:1.2rem;color:var(--primary);margin:0;}
+.dark h1{color:#66b2ff;}
+#themeToggle{cursor:pointer;background:none;border:none;font-size:1.4rem;margin-left:14px;color:var(--primary);}
+.dark #themeToggle{color:#69b8ff;}
+#datetime{font-size:.85rem;color:var(--muted);margin-left:18px;}
+
+nav a{
+  text-decoration:none;font-weight:600;margin-left:18px;color:var(--primary);
+  position:relative;
+}
+nav a::after{
+  content:"";position:absolute;bottom:-3px;left:0;width:0;height:2px;background:var(--primary);transition:.25s;
+}
+nav a:hover::after{width:100%;}
+
+.wrap{max-width:1100px;margin:auto;padding:24px;flex:1;}
+.grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));}
+.card{
+  background:var(--white);
+  border-radius:14px;
+  box-shadow:var(--shadow);
+  border:1px solid var(--border);
+  padding:20px;
+  text-align:center;
+}
+.dark .card{background:var(--card);}
+
+.total-card {
+  text-align:center;
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  color:#fff;
+  border-radius:16px;
+  padding:24px;
+  box-shadow:0 6px 20px rgba(0,120,255,0.4);
+  font-family:"Outfit";
+  font-weight:700;
+  margin-bottom:24px;
+}
+.total-card span {
+  display:block;
+  font-size:2.5rem;
+  font-weight:800;
+  margin-top:10px;
+}
+
+footer{
+  text-align:center;
+  padding:14px;
+  color:var(--muted);
+  font-size:.85rem;
+  background:var(--white);
+  border-top:1px solid var(--border);
+  box-shadow:0 -2px 8px rgba(0,0,0,0.05);
+}
+.dark footer{background:#161b22;border-top:1px solid #2d333b;color:#9099a6;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Dashboard</h1>
+  <div style="display:flex;align-items:center;gap:14px">
+    <span id="datetime"></span>
+    <button id="themeToggle">🌙</button>
+
+    <nav id="mainNav">
+      <a id="adminLink" href="admin.html">Administrador</a>
+      <a href="excluidos.html">Excluídos</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="total-card">
+    Total de Checklists
+    <span id="totalChecklists">0</span>
+  </div>
+
+  <div class="grid">
+    <div class="card"><canvas id="chart1"></canvas></div>
+    <div class="card"><canvas id="chart2"></canvas></div>
+    <div class="card"><canvas id="chart3"></canvas></div>
+  </div>
+</div>
+
+<footer>
+  © 2025 | Sistema de Checklists — Desenvolvido por <b>Lucas Grassotti Spolavori</b>
+</footer>
+
+<script>
+/* === DATA E TEMA === */
+setInterval(()=>{
+  document.getElementById("datetime").textContent = new Date().toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"});
+},1000);
+
+const toggle=document.getElementById("themeToggle");
+if(localStorage.getItem("tema")==="dark"){document.body.classList.add("dark");toggle.textContent="☀️";}
+toggle.onclick=()=>{
+  document.body.classList.toggle("dark");
+  const dark=document.body.classList.contains("dark");
+  toggle.textContent=dark?"☀️":"🌙";
+  localStorage.setItem("tema",dark?"dark":"light");
+};
+
+/* === EVITAR RELOGIN === */
+document.getElementById('adminLink').addEventListener('click', function(e){
+  e.preventDefault();
+  localStorage.setItem('auth','true');
+  window.location.href = 'admin.html';
+});
+
+/* === FUNÇÃO PARA OBTER DADOS DO LOCALSTORAGE === */
+function getChecklists(){
+  const data=[];
+  for(const key in localStorage){
+    if(!isNaN(key)){ 
+      try{
+        const item=JSON.parse(localStorage.getItem(key));
+        if(item && item.data) data.push(item);
+      }catch{}
+    }
+  }
+  return data;
+}
+
+const checklists = getChecklists();
+
+/* === TOTAL === */
+document.getElementById("totalChecklists").textContent = checklists.length;
+
+/* === GRÁFICO 1 - Checklists por mês === */
+const meses=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const counts = new Array(12).fill(0);
+checklists.forEach(c=>{
+  const mes = new Date(c.data).getMonth();
+  if(!isNaN(mes)) counts[mes]++;
+});
+new Chart(document.getElementById("chart1"),{
+  type:"bar",
+  data:{labels:meses,datasets:[{label:"Checklists",data:counts,backgroundColor:"rgba(0,120,255,0.7)"}]},
+  options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+});
+
+/* === GRÁFICO 2 - Veículos por tipo === */
+const tipos = {carro:0, caminhão:0, trator:0};
+checklists.forEach(c=>{
+  const t = (c.tipo||"").toLowerCase();
+  if(tipos[t]!==undefined) tipos[t]++;
+});
+new Chart(document.getElementById("chart2"),{
+  type:"doughnut",
+  data:{
+    labels:["Carros","Caminhões","Tratores"],
+    datasets:[{
+      data:[tipos.carro, tipos.caminhão, tipos.trator],
+      backgroundColor:[
+        "rgba(0,120,255,0.85)",   // azul principal
+        "rgba(0,180,255,0.75)",   // azul-ciano claro
+        "rgba(0,100,200,0.8)"     // azul mais escuro
+      ],
+      borderWidth:1,
+      hoverOffset:10
+    }]
+  },
+  options:{plugins:{legend:{position:"bottom"}}}
+});
+
+/* === GRÁFICO 3 - Checklists últimos 7 dias === */
+const dias = [];
+const hoje = new Date();
+for(let i=6;i>=0;i--){
+  const d = new Date(hoje);
+  d.setDate(hoje.getDate()-i);
+  dias.push(d.toISOString().split("T")[0]);
+}
+const contagens = dias.map(day =>
+  checklists.filter(c => (c.data||"").startsWith(day)).length
+);
+new Chart(document.getElementById("chart3"),{
+  type:"line",
+  data:{
+    labels:dias.map(d=>d.split("-").reverse().slice(0,2).join("/")),
+    datasets:[{label:"Últimos 7 dias",data:contagens,fill:false,borderColor:"#0078ff",tension:0.3}]
+  },
+  options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+});
+</script>
+</body>
+</html>
