@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Administração</title>
+
+<!-- jsPDF + AutoTable -->
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary:#0078ff;
+  --accent:#00b4ff;
+  --bg:#f5f8fb;
+  --white:#ffffff;
+  --card:#ffffff;
+  --text:#1a1a1a;
+  --muted:#666;
+  --border:#e3e6eb;
+  --shadow:0 8px 28px rgba(0,0,0,0.08);
+}
+.dark {
+  --bg:#0f1419;
+  --white:#1b2128;
+  --card:#1e252d;
+  --text:#e9eef5;
+  --muted:#a7b0bc;
+  --border:#2b3139;
+  --shadow:0 4px 16px rgba(0,0,0,0.6);
+}
+
+*{box-sizing:border-box;font-family:"Inter",sans-serif;transition:all .25s ease;}
+body{margin:0;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100vh;}
+
+/* HEADER */
+header{
+  backdrop-filter:blur(14px);
+  background:var(--white);
+  padding:14px 26px;
+  display:flex;justify-content:space-between;align-items:center;
+  position:sticky;top:0;z-index:10;
+  border-bottom:1px solid var(--border);
+  box-shadow:var(--shadow);
+}
+.dark header{background:rgba(30,37,45,0.85);}
+header h1{font-family:"Outfit";font-weight:800;font-size:1.3rem;color:var(--primary);margin:0;}
+
+nav a{
+  text-decoration:none;font-weight:600;margin-left:18px;color:var(--primary);position:relative;
+}
+nav a::after{
+  content:"";position:absolute;bottom:-3px;left:0;width:0;height:2px;background:var(--primary);transition:.25s;
+}
+nav a:hover::after{width:100%;}
+
+/* BOTÃO DE TEMA */
+#themeToggle{
+  cursor:pointer;background:var(--card);border:1px solid var(--border);
+  border-radius:50%;width:38px;height:38px;font-size:1.2rem;
+  display:flex;align-items:center;justify-content:center;
+  margin-left:14px;box-shadow:var(--shadow);
+}
+#themeToggle:hover{transform:scale(1.05);}
+.dark #themeToggle{background:var(--white);color:var(--primary);}
+
+/* DATETIME */
+#datetime{font-size:.85rem;color:var(--muted);margin-right:14px;}
+
+/* CONTEÚDO */
+.wrap{max-width:1100px;margin:auto;padding:24px;flex:1;}
+
+/* FILTROS */
+.filters{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:18px;justify-content:center;}
+.filters input,.filters select{
+  padding:9px;border-radius:9px;border:1px solid var(--border);
+  background:var(--card);color:var(--text);
+}
+
+/* LISTA */
+.list{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));}
+.row{
+  background:var(--white);border-radius:14px;box-shadow:var(--shadow);
+  cursor:pointer;overflow:hidden;animation:fadeUp .4s ease;
+  display:flex;flex-direction:column;
+}
+.dark .row{background:var(--card);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.thumb img{width:100%;height:160px;object-fit:cover;display:block;border-bottom:1px solid var(--border);}
+.meta{padding:14px;}
+.actions{display:flex;gap:8px;margin-top:10px;}
+.export-btn,.delete-btn{flex:1;border:none;padding:10px;border-radius:10px;font-weight:600;cursor:pointer;}
+.export-btn{background:var(--primary);color:#fff;}
+.delete-btn{background:#dc3545;color:#fff;}
+.row .summary { margin-top:8px;font-size:.92rem;color:var(--muted); }
+
+/* RADIO */
+input[type="radio"] {
+  appearance:none;
+  width:18px;height:18px;
+  border:2px solid var(--primary);
+  border-radius:50%;
+  background:var(--card);
+  cursor:pointer;
+  position:relative;
+}
+input[type="radio"]:checked::before{
+  content:"";position:absolute;top:3px;left:3px;
+  width:8px;height:8px;border-radius:50%;
+  background:var(--primary);
+}
+.dark input[type="radio"]{border-color:#4da6ff;background:#1e252d;}
+.dark input[type="radio"]:checked::before{background:#4da6ff;}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:22px;padding:12px 18px;border-radius:10px;
+  color:#fff;font-weight:600;box-shadow:0 8px 28px rgba(0,0,0,0.25);
+  animation:pop .4s ease;}
+@keyframes pop{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* MODAL */
+#viewScreen{
+  position:fixed;inset:0;background:rgba(0,0,0,0.6);
+  display:none;align-items:center;justify-content:center;z-index:50;padding:12px;
+}
+#viewContainer{
+  background:var(--white);border-radius:18px;
+  padding:26px;width:100%;max-width:880px;max-height:92vh;overflow:auto;
+  box-shadow:var(--shadow);
+}
+.dark #viewContainer{background:var(--card);}
+#btnVoltarView{background:none;border:none;font-size:1.8rem;color:var(--primary);cursor:pointer;margin-bottom:10px;}
+
+/* PDF buttons area */
+.pdf-actions{display:flex;gap:8px;justify-content:flex-end;margin-bottom:8px;}
+.pdf-actions button{padding:8px 12px;border-radius:8px;border:none;cursor:pointer;font-weight:700;}
+#pdfCom{background:var(--primary);color:#fff;}
+#pdfSem{background:#444;color:#fff;}
+
+/* ZOOM */
+#zoomOverlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.85);
+  display:flex;align-items:center;justify-content:center;
+  z-index:9999;cursor:zoom-out;
+}
+#zoomOverlay img{
+  max-width:90%;max-height:90%;border-radius:12px;
+  box-shadow:0 8px 30px rgba(0,0,0,0.7);
+}
+
+/* TABLE / VIEW styles - ensure same look as Excluídos */
+#viewContainer table th,
+#viewContainer table td {
+  border:1px solid var(--border);
+  padding:8px;
+  color:var(--text);
+}
+#viewContainer table th { background:var(--primary); color:#fff; text-align:left; }
+
+/* FOOTER */
+footer{text-align:center;padding:14px;color:var(--muted);font-size:.85rem;
+  background:var(--white);margin-top:auto;border-top:1px solid var(--border);
+  box-shadow:0 -3px 12px rgba(0,0,0,0.06);}
+.dark footer{background:var(--card);}
+</style>
+</head>
+
+<body>
+<header>
+  <h1>Administração</h1>
+  <div style="display:flex;align-items:center;gap:14px">
+    <span id="datetime"></span>
+    <button id="themeToggle">🌙</button>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="excluidos.html">Excluídos</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <h2 style="text-align:center;font-family:'Outfit';color:var(--primary);">Listagem de Checklists</h2>
+
+  <div class="filters">
+    <select id="filtroMes">
+      <option value="">Mês</option>
+      <option value="-01-">Jan</option><option value="-02-">Fev</option>
+      <option value="-03-">Mar</option><option value="-04-">Abr</option>
+      <option value="-05-">Mai</option><option value="-06-">Jun</option>
+      <option value="-07-">Jul</option><option value="-08-">Ago</option>
+      <option value="-09-">Set</option><option value="-10-">Out</option>
+      <option value="-11-">Nov</option><option value="-12-">Dez</option>
+    </select>
+    <input id="filtroPlaca" type="text" placeholder="Placa...">
+  </div>
+
+  <div id="list" class="list"></div>
+  <div id="empty" style="display:none;text-align:center;color:var(--muted);">Nenhum checklist encontrado.</div>
+</div>
+
+<!-- MODAL -->
+<div id="viewScreen">
+  <div id="viewContainer">
+    <div class="pdf-actions" id="pdfActions" style="display:none;">
+      <button id="pdfCom">Com imagem</button>
+      <button id="pdfSem">Sem imagem</button>
+    </div>
+
+    <button id="btnVoltarView">&lt;</button>
+    <div id="viewContent" style="margin-top:10px;"></div>
+  </div>
+</div>
+
+<footer>
+  © 2025 | Sistema de Checklists — Desenvolvido por <b>Lucas Grassotti Spolavori</b>
+</footer>
+
+<script>
+/* elementos */
+const filtroMes = document.getElementById('filtroMes');
+const filtroPlaca = document.getElementById('filtroPlaca');
+const list = document.getElementById('list');
+const empty = document.getElementById('empty');
+const viewScreen = document.getElementById('viewScreen');
+const viewContent = document.getElementById('viewContent');
+const btnVoltarView = document.getElementById('btnVoltarView');
+const pdfActions = document.getElementById('pdfActions');
+const pdfCom = document.getElementById('pdfCom');
+const pdfSem = document.getElementById('pdfSem');
+
+/* data/hora */
+setInterval(()=> {
+  document.getElementById("datetime").textContent =
+    new Date().toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"});
+},1000);
+
+/* tema */
+const toggle=document.getElementById("themeToggle");
+if(localStorage.getItem("tema")==="dark"){
+  document.body.classList.add("dark");
+  toggle.textContent="☀️";
+}
+toggle.onclick=()=>{
+  document.body.classList.toggle("dark");
+  const d=document.body.classList.contains("dark");
+  toggle.textContent=d?"☀️":"🌙";
+  localStorage.setItem("tema",d?"dark":"light");
+};
+
+/* toast */
+function showToast(msg, color="var(--primary)"){
+  const t=document.createElement("div");
+  t.className="toast";
+  t.style.background=color;
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+
+/* filtros */
+filtroMes.onchange = filtroPlaca.oninput = carregarLista;
+
+/* carregar checklists (somente chaves numéricas) */
+function carregarLista(){
+  list.innerHTML = "";
+  const keys = Object.keys(localStorage).filter(k => /^\d+$/.test(k)).sort((a,b)=>b-a);
+  let count = 0;
+  keys.forEach(key=>{
+    let d;
+    try { d = JSON.parse(localStorage.getItem(key)); } catch(e) { return; }
+    if(!d || Object.keys(d).length === 0) return;
+
+    if(filtroMes.value && !(d.data||"").includes(filtroMes.value)) return;
+    if(filtroPlaca.value && !(d.placa||"").toLowerCase().includes(filtroPlaca.value.toLowerCase())) return;
+
+    let ok=0, reg=0, ruim=0;
+    if(d.itens){
+      Object.values(d.itens).forEach(v=>{
+        if(v==="OK") ok++;
+        else if(v==="Regular") reg++;
+        else if(v==="Ruim") ruim++;
+      });
+    }
+
+    const el = document.createElement('div');
+    el.className = 'row';
+    el.innerHTML = `
+      <div class="thumb">
+        <img src="${(d.fotos && d.fotos[0]) || 'https://via.placeholder.com/600x350?text=Sem+Imagem'}" alt="thumb">
+      </div>
+      <div class="meta">
+        <div><b>${escapeHtml(d.placa||"Sem placa")}</b></div>
+        <div>Tipo: ${escapeHtml(d.tipo||"Não informado")}</div>
+        <div>KM: ${escapeHtml(d.km||"—")}</div>
+        <div>Horímetro: ${escapeHtml(d.horimetro||"—")}</div>
+        <div>Motorista: ${escapeHtml(d.motorista||"Não informado")}</div>
+        <div>Data: ${escapeHtml(d.data||"—")}</div>
+        <div class="summary"><strong>Itens:</strong> OK: ${ok} | Regular: ${reg} | Ruim: ${ruim}</div>
+        <div class="actions">
+          <button class="export-btn">PDF</button>
+          <button class="delete-btn">Excluir</button>
+        </div>
+      </div>
+    `;
+
+    // botão PDF (no card) -> abre modal e mostra pdfActions
+    el.querySelector('.export-btn').onclick = (e) => {
+      e.stopPropagation();
+      abrirVis(d);
+      pdfActions.style.display = 'flex';
+      pdfCom.onclick = ()=>{ gerarPDF(d, true); pdfActions.style.display='none'; };
+      pdfSem.onclick = ()=>{ gerarPDF(d, false); pdfActions.style.display='none'; };
+    };
+
+    // excluir -> mover para excluídos
+    el.querySelector('.delete-btn').onclick = (e) => {
+      e.stopPropagation();
+      if(confirm('Mover este checklist para Excluídos?')){
+        try {
+          localStorage.setItem('excluido_' + key, JSON.stringify(d));
+          localStorage.removeItem(key);
+          carregarLista();
+          showToast('🗑️ Movido para Excluídos', '#dc3545');
+        } catch(err){
+          console.error(err);
+          showToast('Erro ao mover', '#dc3545');
+        }
+      }
+    };
+
+    // clique no card -> abrir modal (visualização)
+    el.onclick = ()=> {
+      abrirVis(d);
+      pdfActions.style.display = 'flex';
+      pdfCom.onclick = ()=>{ gerarPDF(d, true); pdfActions.style.display='none'; };
+      pdfSem.onclick = ()=>{ gerarPDF(d, false); pdfActions.style.display='none'; };
+    };
+
+    list.appendChild(el);
+    count++;
+  });
+
+  empty.style.display = count ? 'none' : 'block';
+}
+
+/* fechar modal */
+btnVoltarView.onclick = ()=> {
+  viewScreen.style.display = 'none';
+  pdfActions.style.display = 'none';
+};
+
+/* abrirVis: usa markup empilhado (igual Excluídos) */
+function abrirVis(d){
+  let html = `
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    <div><strong>Tipo:</strong><br>
+      <input disabled value="${escapeHtml(d.tipo||"")}" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);">
+    </div>
+    <div><strong>Placa:</strong><br>
+      <input disabled value="${escapeHtml(d.placa||"")}" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);">
+    </div>
+    <div><strong>KM:</strong><br>
+      <input disabled value="${escapeHtml(d.km||"")}" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);">
+    </div>
+    <div><strong>Horímetro da Bomba:</strong><br>
+      <input disabled value="${escapeHtml(d.horimetro||"")}" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);">
+    </div>
+    <div><strong>Data:</strong><br>
+      <input disabled value="${escapeHtml(d.data||"")}" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);">
+    </div>
+    <div><strong>Motorista:</strong><br>
+      <input disabled value="${escapeHtml(d.motorista||"")}" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);">
+    </div>
+    <div><strong>Observações Gerais:</strong><br>
+      <textarea disabled rows="3" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);resize:none;">${escapeHtml(d.obs||"")}</textarea>
+    </div>
+
+    <h3 style="margin-top:10px;color:var(--primary);font-family:'Outfit';">Itens Inspecionados</h3>
+    <table style="width:100%;border-collapse:collapse;margin-top:6px;">
+      <thead>
+        <tr>
+          <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);text-align:left;">Item</th>
+          <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);">OK</th>
+          <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);">Regular</th>
+          <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);">Ruim</th>
+          <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);text-align:left;">Observação</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  if(d.itens){
+    for(const k in d.itens){
+      const v=d.itens[k];
+      const obs = (d.observacoesItens && d.observacoesItens[k]) ? d.observacoesItens[k] : (d.observacoes && d.observacoes[k] ? d.observacoes[k] : "");
+      html += `
+        <tr style="text-align:center;">
+          <td style="border:1px solid var(--border);padding:8px;text-align:left;">${escapeHtml(k)}</td>
+          <td style="border:1px solid var(--border);padding:6px;"><input type="radio" disabled ${v==="OK"?"checked":""}></td>
+          <td style="border:1px solid var(--border);padding:6px;"><input type="radio" disabled ${v==="Regular"?"checked":""}></td>
+          <td style="border:1px solid var(--border);padding:6px;"><input type="radio" disabled ${v==="Ruim"?"checked":""}></td>
+          <td style="border:1px solid var(--border);padding:6px;text-align:left;">${escapeHtml(obs)}</td>
+        </tr>
+      `;
+    }
+  }
+
+  html += `
+      </tbody>
+    </table>
+
+    <div><strong>Fotos do veículo:</strong>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;">
+  `;
+
+  (d.fotos||[]).forEach(f=>{
+    const safe = f;
+    html += `<img src="${safe}" class="foto" style="width:150px;height:100px;object-fit:cover;border-radius:10px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);transition:.2s;">`;
+  });
+
+  html += `
+      </div>
+    </div>
+  </div>
+  `;
+
+  viewContent.innerHTML = html;
+  viewScreen.style.display = 'flex';
+
+  // zoom imagens
+  document.querySelectorAll('.foto').forEach(img=>{
+    img.addEventListener('click', ()=>{
+      const overlay = document.createElement('div');
+      overlay.id = 'zoomOverlay';
+      const big = document.createElement('img');
+      big.src = img.src;
+      overlay.appendChild(big);
+      document.body.appendChild(overlay);
+      overlay.onclick = ()=> overlay.remove();
+    });
+  });
+}
+
+/* gerarPDF com círculo seguro e fallback */
+function gerarPDF(d, incluirImagens){
+  try{
+    if(!window.jspdf) { showToast('jsPDF não encontrado','#dc3545'); return; }
+    const pdf = new window.jspdf.jsPDF({unit:'pt',format:'a4'});
+    pdf.setFont('helvetica');
+    pdf.setFontSize(18);
+    let y = 40;
+    pdf.text('Checklist de Veículo', 40, y); y += 26;
+    pdf.setFontSize(12);
+
+    const fields = [
+      `Tipo: ${d.tipo||''}`,
+      `Placa: ${d.placa||''}`,
+      `KM: ${d.km||''}`,
+      `Horímetro: ${d.horimetro||''}`,
+      `Data: ${d.data||''}`,
+      `Motorista: ${d.motorista||''}`
+    ];
+    fields.forEach(f=>{ pdf.text(f, 40, y); y += 16; });
+
+    y += 8;
+    pdf.text('Observações:', 40, y); y += 14;
+    const obsText = (d.obs||'-').toString();
+    const obsLines = pdf.splitTextToSize(obsText, 500);
+    pdf.text(obsLines, 50, y);
+    y += obsLines.length * 14 + 12;
+
+    const circle = '\u25CF';
+    let symbol = circle;
+    try { const w = pdf.getTextWidth(circle); if(!w || w < 0.1) symbol = 'o'; } catch(e){ symbol = 'o'; }
+
+    const body = [];
+    if(d.itens){
+      Object.entries(d.itens).forEach(([item, val]) => {
+        const obs = (d.observacoesItens && d.observacoesItens[item]) ? d.observacoesItens[item] : (d.observacoes && d.observacoes[item] ? d.observacoes[item] : '');
+        body.push([item, val==="OK"?symbol:"", val==="Regular"?symbol:"", val==="Ruim"?symbol:"", obs]);
+      });
+    }
+
+    // escolha o símbolo que será impresso no PDF para marcar (troque se preferir)
+const circleSymbol = 'o'; // '•' - se der errado troque por 'o' ou '\u25CF'
+
+// construir body com o símbolo (substitui a construção de body anterior)
+const pdfBody = Object.entries(d.itens || {}).map(([item, val]) => [
+  item,
+  val === "OK" ? circleSymbol : "",
+  val === "Regular" ? circleSymbol : "",
+  val === "Ruim" ? circleSymbol : "",
+  (d.observacoesItens && d.observacoesItens[item]) ? d.observacoesItens[item] : ""
+]);
+
+// chamada simples do autoTable (mantém layout original)
+pdf.autoTable({
+  startY: y,
+  head: [["Item", "OK", "Regular", "Ruim", "Observação"]],
+  body: pdfBody,
+  theme: "grid",
+  styles: { fontSize: 11, cellPadding: 5 },
+  headStyles: { fillColor: [0, 120, 255], textColor: 255 }
+});
+
+    if(incluirImagens && d.fotos && d.fotos.length){
+      let posY = pdf.lastAutoTable ? (pdf.lastAutoTable.finalY + 20) : (y + 20);
+      d.fotos.forEach(src => {
+        try{
+          if(posY + 140 > pdf.internal.pageSize.getHeight()){
+            pdf.addPage(); posY = 40;
+          }
+          pdf.addImage(src, 'JPEG', 40, posY, 220, 120);
+          posY += 140;
+        }catch(e){
+          console.warn('erro imagem pdf', e);
+        }
+      });
+    }
+
+    const nome = `Checklist_${(d.placa||'sem_placa').replace(/\s+/g,'_')}.pdf`;
+    pdf.save(nome);
+  }catch(err){
+    console.error(err);
+    showToast('Erro ao gerar PDF', '#dc3545');
+  }
+}
+
+/* escape */
+function escapeHtml(s){
+  if(!s && s !== 0) return "";
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* inicializa */
+carregarLista();
+</script>
+</body>
+</html>
