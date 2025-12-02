@@ -162,7 +162,7 @@ footer{text-align:center;padding:14px;color:var(--muted);font-size:.85rem;
     <span id="datetime"></span>
     <button id="themeToggle">🌙</button>
     <nav>
-      <a id="adminNav" href="admin.html">Administrador</a>
+      <a id="adminNav" href="index.html">Administrador</a>
       <a href="dashboard.html">Dashboard</a>
     </nav>
   </div>
@@ -232,7 +232,7 @@ toggle.onclick=()=>{
 document.getElementById('adminNav').addEventListener('click',function(e){
   e.preventDefault();
   localStorage.setItem('auth','true');
-  window.location.href='admin.html';
+  window.location.href='index.html';
 });
 
 /* Toast */
