@@ -336,6 +336,24 @@ footer{text-align:center;padding:14px;color:var(--muted);font-size:.85rem;
   © 2025 | Sistema de Checklists — Desenvolvido por <b>Lucas Grassotti Spolavori</b>
 </footer>
 
+<!-- FIREBASE (APP + FIRESTORE) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+// MESMA CONFIG QUE NO checklist.html
+const firebaseConfig = {
+  apiKey: "SUA_API_KEY_AQUI",
+  authDomain: "seu-projeto.firebaseapp.com",
+  projectId: "seu-projeto-id",
+  storageBucket: "seu-projeto.appspot.com",
+  messagingSenderId: "000000000000",
+  appId: "1:000000000000:web:xxxxxxxxxxxxxxxxxxxx"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+</script>
+
 <script>
 /* elementos */
 const filtroMes = document.getElementById('filtroMes');
@@ -379,89 +397,106 @@ function showToast(msg, color="var(--primary)"){
 }
 
 /* filtros */
-filtroMes.onchange = filtroPlaca.oninput = carregarLista;
+filtroMes.onchange = filtroPlaca.oninput = () => carregarLista();
 
-/* carregar checklists (somente chaves numéricas) */
-function carregarLista(){
+/* carregar checklists do Firestore */
+async function carregarLista(){
   list.innerHTML = "";
-  const keys = Object.keys(localStorage).filter(k => /^\d+$/.test(k)).sort((a,b)=>b-a);
   let count = 0;
-  keys.forEach(key=>{
-    let d;
-    try { d = JSON.parse(localStorage.getItem(key)); } catch(e) { return; }
-    if(!d || Object.keys(d).length === 0) return;
 
-    if(filtroMes.value && !(d.data||"").includes(filtroMes.value)) return;
-    if(filtroPlaca.value && !(d.placa||"").toLowerCase().includes(filtroPlaca.value.toLowerCase())) return;
+  try{
+    // busca todos os checklists, ordenados por data de criação (mais recentes primeiro)
+    const snap = await db.collection('checklists')
+      .orderBy('criadoEm', 'desc')
+      .get();
 
-    let ok=0, reg=0, ruim=0;
-    if(d.itens){
-      Object.values(d.itens).forEach(v=>{
-        if(v==="OK") ok++;
-        else if(v==="Regular") reg++;
-        else if(v==="Ruim") ruim++;
-      });
-    }
+    const dados = snap.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
 
-    const el = document.createElement('div');
-    el.className = 'row';
-    el.innerHTML = `
-      <div class="thumb">
-        <img src="${(d.fotos && d.fotos[0]) || 'https://via.placeholder.com/600x350?text=Sem+Imagem'}" alt="thumb">
-      </div>
-      <div class="meta">
-        <div><b>${escapeHtml(d.placa||"Sem placa")}</b></div>
-        <div>Tipo: ${escapeHtml(d.tipo||"Não informado")}</div>
-        <div>KM: ${escapeHtml(d.km||"—")}</div>
-        <div>Horímetro: ${escapeHtml(d.horimetro||"—")}</div>
-        <div>Motorista: ${escapeHtml(d.motorista||"Não informado")}</div>
-        <div>Data: ${escapeHtml(d.data||"—")}</div>
-        <div class="summary"><strong>Itens:</strong> OK: ${ok} | Regular: ${reg} | Ruim: ${ruim}</div>
-        <div class="actions">
-          <button class="export-btn">PDF</button>
-          <button class="delete-btn">Excluir</button>
-        </div>
-      </div>
-    `;
+    dados.forEach(d => {
+      if(!d || Object.keys(d).length === 0) return;
 
-    // botão PDF (no card) -> abre modal e mostra pdfActions
-    el.querySelector('.export-btn').onclick = (e) => {
-      e.stopPropagation();
-      abrirVis(d);
-      pdfActions.style.display = 'flex';
-      pdfCom.onclick = ()=>{ gerarPDF(d, true); pdfActions.style.display='none'; };
-      pdfSem.onclick = ()=>{ gerarPDF(d, false); pdfActions.style.display='none'; };
-    };
+      if(filtroMes.value && !(d.data||"").includes(filtroMes.value)) return;
+      if(filtroPlaca.value && !(d.placa||"").toLowerCase().includes(filtroPlaca.value.toLowerCase())) return;
 
-    // excluir -> mover para excluídos
-    el.querySelector('.delete-btn').onclick = (e) => {
-      e.stopPropagation();
-      if(confirm('Mover este checklist para Excluídos?')){
-        try {
-          localStorage.setItem('excluido_' + key, JSON.stringify(d));
-          localStorage.removeItem(key);
-          carregarLista();
-          showToast('🗑️ Movido para Excluídos', '#dc3545');
-        } catch(err){
-          console.error(err);
-          showToast('Erro ao mover', '#dc3545');
-        }
+      let ok=0, reg=0, ruim=0;
+      if(d.itens){
+        Object.values(d.itens).forEach(v=>{
+          if(v==="OK") ok++;
+          else if(v==="Regular") reg++;
+          else if(v==="Ruim") ruim++;
+        });
       }
-    };
 
-    // clique no card -> abrir modal (visualização)
-    el.onclick = ()=> {
-      abrirVis(d);
-      pdfActions.style.display = 'flex';
-      pdfCom.onclick = ()=>{ gerarPDF(d, true); pdfActions.style.display='none'; };
-      pdfSem.onclick = ()=>{ gerarPDF(d, false); pdfActions.style.display='none'; };
-    };
+      const el = document.createElement('div');
+      el.className = 'row';
+      el.innerHTML = `
+        <div class="thumb">
+          <img src="${(d.fotos && d.fotos[0]) || 'https://via.placeholder.com/600x350?text=Sem+Imagem'}" alt="thumb">
+        </div>
+        <div class="meta">
+          <div><b>${escapeHtml(d.placa||"Sem placa")}</b></div>
+          <div>Tipo: ${escapeHtml(d.tipo||"Não informado")}</div>
+          <div>KM: ${escapeHtml(d.km||"—")}</div>
+          <div>Horímetro: ${escapeHtml(d.horimetro||"—")}</div>
+          <div>Motorista: ${escapeHtml(d.motorista||"Não informado")}</div>
+          <div>Data: ${escapeHtml(d.data||"—")}</div>
+          <div class="summary"><strong>Itens:</strong> OK: ${ok} | Regular: ${reg} | Ruim: ${ruim}</div>
+          <div class="actions">
+            <button class="export-btn">PDF</button>
+            <button class="delete-btn">Excluir</button>
+          </div>
+        </div>
+      `;
 
-    list.appendChild(el);
-    count++;
-  });
+      // botão PDF (no card) -> abre modal e mostra pdfActions
+      el.querySelector('.export-btn').onclick = (e) => {
+        e.stopPropagation();
+        abrirVis(d);
+        pdfActions.style.display = 'flex';
+        pdfCom.onclick = ()=>{ gerarPDF(d, true); pdfActions.style.display='none'; };
+        pdfSem.onclick = ()=>{ gerarPDF(d, false); pdfActions.style.display='none'; };
+      };
 
-  empty.style.display = count ? 'none' : 'block';
+      // excluir -> mover para coleção "checklistsExcluidos" no Firestore
+      el.querySelector('.delete-btn').onclick = async (e) => {
+        e.stopPropagation();
+        if(confirm('Mover este checklist para Excluídos?')){
+          try {
+            // adiciona na coleção de excluídos
+            await db.collection('checklistsExcluidos').add(d);
+            // remove da coleção principal
+            await db.collection('checklists').doc(d.id).delete();
+
+            carregarLista();
+            showToast('🗑️ Movido para Excluídos', '#dc3545');
+          } catch(err){
+            console.error(err);
+            showToast('Erro ao mover', '#dc3545');
+          }
+        }
+      };
+
+      // clique no card -> abrir modal (visualização)
+      el.onclick = ()=> {
+        abrirVis(d);
+        pdfActions.style.display = 'flex';
+        pdfCom.onclick = ()=>{ gerarPDF(d, true); pdfActions.style.display='none'; };
+        pdfSem.onclick = ()=>{ gerarPDF(d, false); pdfActions.style.display='none'; };
+      };
+
+      list.appendChild(el);
+      count++;
+    });
+
+    empty.style.display = count ? 'none' : 'block';
+  }catch(err){
+    console.error('Erro ao carregar checklists:', err);
+    showToast('Erro ao carregar checklists', '#dc3545');
+    empty.style.display = 'block';
+  }
 }
 
 /* fechar modal */
@@ -513,7 +548,9 @@ function abrirVis(d){
   if(d.itens){
     for(const k in d.itens){
       const v=d.itens[k];
-      const obs = (d.observacoesItens && d.observacoesItens[k]) ? d.observacoesItens[k] : (d.observacoes && d.observacoes[k] ? d.observacoes[k] : "");
+      const obs = (d.observacoesItens && d.observacoesItens[k])
+        ? d.observacoesItens[k]
+        : (d.observacoes && d.observacoes[k] ? d.observacoes[k] : "");
       html += `
         <tr style="text-align:center;">
           <td style="border:1px solid var(--border);padding:8px;text-align:left;">${escapeHtml(k)}</td>
@@ -562,7 +599,7 @@ function abrirVis(d){
   });
 }
 
-/* gerarPDF com círculo seguro e fallback */
+/* gerarPDF (usa dados já carregados) */
 function gerarPDF(d, incluirImagens){
   try{
     if(!window.jspdf) { showToast('jsPDF não encontrado','#dc3545'); return; }
@@ -590,39 +627,25 @@ function gerarPDF(d, incluirImagens){
     pdf.text(obsLines, 50, y);
     y += obsLines.length * 14 + 12;
 
-    const circle = '\u25CF';
-    let symbol = circle;
-    try { const w = pdf.getTextWidth(circle); if(!w || w < 0.1) symbol = 'o'; } catch(e){ symbol = 'o'; }
+    // símbolo simples para marcar (melhor compatibilidade)
+    const circleSymbol = 'o';
 
-    const body = [];
-    if(d.itens){
-      Object.entries(d.itens).forEach(([item, val]) => {
-        const obs = (d.observacoesItens && d.observacoesItens[item]) ? d.observacoesItens[item] : (d.observacoes && d.observacoes[item] ? d.observacoes[item] : '');
-        body.push([item, val==="OK"?symbol:"", val==="Regular"?symbol:"", val==="Ruim"?symbol:"", obs]);
-      });
-    }
+    const pdfBody = Object.entries(d.itens || {}).map(([item, val]) => [
+      item,
+      val === "OK" ? circleSymbol : "",
+      val === "Regular" ? circleSymbol : "",
+      val === "Ruim" ? circleSymbol : "",
+      (d.observacoesItens && d.observacoesItens[item]) ? d.observacoesItens[item] : ""
+    ]);
 
-    // escolha o símbolo que será impresso no PDF para marcar (troque se preferir)
-const circleSymbol = 'o'; // '•' - se der errado troque por 'o' ou '\u25CF'
-
-// construir body com o símbolo (substitui a construção de body anterior)
-const pdfBody = Object.entries(d.itens || {}).map(([item, val]) => [
-  item,
-  val === "OK" ? circleSymbol : "",
-  val === "Regular" ? circleSymbol : "",
-  val === "Ruim" ? circleSymbol : "",
-  (d.observacoesItens && d.observacoesItens[item]) ? d.observacoesItens[item] : ""
-]);
-
-// chamada simples do autoTable (mantém layout original)
-pdf.autoTable({
-  startY: y,
-  head: [["Item", "OK", "Regular", "Ruim", "Observação"]],
-  body: pdfBody,
-  theme: "grid",
-  styles: { fontSize: 11, cellPadding: 5 },
-  headStyles: { fillColor: [0, 120, 255], textColor: 255 }
-});
+    pdf.autoTable({
+      startY: y,
+      head: [["Item", "OK", "Regular", "Ruim", "Observação"]],
+      body: pdfBody,
+      theme: "grid",
+      styles: { fontSize: 11, cellPadding: 5 },
+      headStyles: { fillColor: [0, 120, 255], textColor: 255 }
+    });
 
     if(incluirImagens && d.fotos && d.fotos.length){
       let posY = pdf.lastAutoTable ? (pdf.lastAutoTable.finalY + 20) : (y + 20);
