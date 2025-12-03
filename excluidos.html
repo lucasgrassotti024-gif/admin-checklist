@@ -7,7 +7,7 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
 
-<!-- jsPDF para poder gerar PDF daqui também (opcional) -->
+<!-- jsPDF (se algum dia quiser gerar PDF daqui também) -->
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
@@ -314,6 +314,23 @@ footer{text-align:center;padding:14px;color:var(--muted);font-size:.85rem;
   © 2025 | Sistema de Checklists — Desenvolvido por <b>Lucas Grassotti Spolavori</b>
 </footer>
 
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+// MESMA CONFIG QUE NO checklist.html e admin.html
+const firebaseConfig = {
+  apiKey: "SUA_API_KEY_AQUI",
+  authDomain: "seu-projeto.firebaseapp.com",
+  projectId: "seu-projeto-id",
+  storageBucket: "seu-projeto.appspot.com",
+  messagingSenderId: "000000000000",
+  appId: "1:000000000000:web:xxxxxxxxxxxxxxxxxxxx"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+</script>
+
 <script>
 const filtroMes = document.getElementById('filtroMes');
 const filtroPlaca = document.getElementById('filtroPlaca');
@@ -359,63 +376,80 @@ function showToast(msg, color="var(--primary)"){
   setTimeout(()=>t.remove(),3000);
 }
 
-/* === Carregar Excluídos === */
+/* === Carregar Excluídos do Firestore === */
 filtroMes.onchange=filtroPlaca.oninput=carregarLista;
 
-function carregarLista(){
+async function carregarLista(){
   list.innerHTML="";
-  const keys=Object.keys(localStorage)
-    .filter(k=>k.startsWith("excluido_"))
-    .sort((a,b)=>b-a);
   let count=0;
 
-  keys.forEach(k=>{
-    const d=JSON.parse(localStorage.getItem(k)||"{}");
-    if(filtroMes.value && !(d.data||"").includes(filtroMes.value)) return;
-    if(filtroPlaca.value && !(d.placa||"").toLowerCase().includes(filtroPlaca.value.toLowerCase())) return;
+  try{
+    const snap = await db.collection('checklistsExcluidos')
+      .orderBy('criadoEm','desc')
+      .get();
 
-    let ok=0, reg=0, ruim=0;
-    if(d.itens){
-      Object.values(d.itens).forEach(v=>{
-        if(v==="OK")ok++;else if(v==="Regular")reg++;else if(v==="Ruim")ruim++;
-      });
-    }
+    const dados = snap.docs.map(doc=>({
+      id: doc.id,
+      ...doc.data()
+    }));
 
-    const el=document.createElement("div");
-    el.className="row";
-    el.innerHTML=`
-      <div class="thumb">
-        <img src="${(d.fotos&&d.fotos[0])||'https://via.placeholder.com/600x350?text=Sem+Imagem'}" alt="thumb">
-      </div>
-      <div class="meta">
-        <div><b>${escapeHtml(d.placa||"Sem placa")}</b></div>
-        <div>Tipo: ${escapeHtml(d.tipo||"Não informado")}</div>
-        <div>KM: ${escapeHtml(d.km||"—")}</div>
-        <div>Horímetro: ${escapeHtml(d.horimetro||"—")}</div>
-        <div>Motorista: ${escapeHtml(d.motorista||"Não informado")}</div>
-        <div>Data: ${escapeHtml(d.data||"—")}</div>
-        <div class="summary"><strong>Itens:</strong> OK: ${ok} | Regular: ${reg} | Ruim: ${ruim}</div>
-        <div class="actions">
-          <button class="delete-btn">Excluir</button>
-        </div>
-      </div>
-    `;
+    dados.forEach(d=>{
+      if(filtroMes.value && !(d.data||"").includes(filtroMes.value)) return;
+      if(filtroPlaca.value && !(d.placa||"").toLowerCase().includes(filtroPlaca.value.toLowerCase())) return;
 
-    el.querySelector(".delete-btn").onclick=e=>{
-      e.stopPropagation();
-      if(confirm("Excluir definitivamente este checklist?")){
-        localStorage.removeItem(k);
-        showToast("🗑️ Excluído","#dc3545");
-        carregarLista();
+      let ok=0, reg=0, ruim=0;
+      if(d.itens){
+        Object.values(d.itens).forEach(v=>{
+          if(v==="OK")ok++;else if(v==="Regular")reg++;else if(v==="Ruim")ruim++;
+        });
       }
-    };
 
-    el.onclick=()=>abrirVis(d);
+      const el=document.createElement("div");
+      el.className="row";
+      el.innerHTML=`
+        <div class="thumb">
+          <img src="${(d.fotos&&d.fotos[0])||'https://via.placeholder.com/600x350?text=Sem+Imagem'}" alt="thumb">
+        </div>
+        <div class="meta">
+          <div><b>${escapeHtml(d.placa||"Sem placa")}</b></div>
+          <div>Tipo: ${escapeHtml(d.tipo||"Não informado")}</div>
+          <div>KM: ${escapeHtml(d.km||"—")}</div>
+          <div>Horímetro: ${escapeHtml(d.horimetro||"—")}</div>
+          <div>Motorista: ${escapeHtml(d.motorista||"Não informado")}</div>
+          <div>Data: ${escapeHtml(d.data||"—")}</div>
+          <div class="summary"><strong>Itens:</strong> OK: ${ok} | Regular: ${reg} | Ruim: ${ruim}</div>
+          <div class="actions">
+            <button class="delete-btn">Excluir</button>
+          </div>
+        </div>
+      `;
 
-    list.appendChild(el);
-    count++;
-  });
-  empty.style.display=count?"none":"block";
+      el.querySelector(".delete-btn").onclick=async e=>{
+        e.stopPropagation();
+        if(confirm("Excluir definitivamente este checklist?")){
+          try{
+            await db.collection('checklistsExcluidos').doc(d.id).delete();
+            showToast("🗑️ Excluído","#dc3545");
+            carregarLista();
+          }catch(err){
+            console.error(err);
+            showToast("Erro ao excluir","#dc3545");
+          }
+        }
+      };
+
+      el.onclick=()=>abrirVis(d);
+
+      list.appendChild(el);
+      count++;
+    });
+
+    empty.style.display=count?"none":"block";
+  }catch(err){
+    console.error('Erro ao carregar excluídos:', err);
+    empty.style.display="block";
+    showToast("Erro ao carregar excluídos","#dc3545");
+  }
 }
 
 /* === Modal === */
@@ -463,7 +497,9 @@ function abrirVis(d){
   if(d.itens){
     for(const k in d.itens){
       const v=d.itens[k];
-      const obs = (d.observacoes && d.observacoes[k]) ? d.observacoes[k] : "";
+      const obs = (d.observacoesItens && d.observacoesItens[k])
+        ? d.observacoesItens[k]
+        : (d.observacoes && d.observacoes[k] ? d.observacoes[k] : "");
       html += `
         <tr style="text-align:center;">
           <td style="border:1px solid var(--border);padding:8px;text-align:left;">${escapeHtml(k)}</td>
