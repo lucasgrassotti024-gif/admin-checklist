@@ -101,6 +101,52 @@
         display: none;
         font-weight: 600;
     }
+
+    /* ===== RESPONSIVIDADE (MOBILE) ===== */
+    @media (max-width: 480px) {
+        body {
+            padding: 16px;
+            height: auto;
+            min-height: 100vh;
+        }
+
+        #login-box {
+            width: 100%;
+            max-width: 360px;
+            padding: 22px;
+        }
+
+        h2 {
+            font-size: 20px;
+        }
+
+        input {
+            font-size: 14px;
+            padding: 11px 38px 11px 11px;
+        }
+
+        button {
+            font-size: 15px;
+            padding: 11px;
+        }
+
+        .eye {
+            font-size: 17px;
+            right: 10px;
+        }
+    }
+
+    /* Telas muito pequenas ou em modo paisagem estreito */
+    @media (max-width: 360px) {
+        #login-box {
+            padding: 18px;
+            border-radius: 12px;
+        }
+
+        h2 {
+            font-size: 18px;
+        }
+    }
 </style>
 
 </head>
