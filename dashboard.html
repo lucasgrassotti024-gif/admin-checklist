@@ -232,6 +232,23 @@ footer{
   © 2025 | Sistema de Checklists — Desenvolvido por <b>Lucas Grassotti Spolavori</b>
 </footer>
 
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+// MESMA CONFIG QUE NOS OUTROS ARQUIVOS
+const firebaseConfig = {
+  apiKey: "SUA_API_KEY_AQUI",
+  authDomain: "seu-projeto.firebaseapp.com",
+  projectId: "seu-projeto-id",
+  storageBucket: "seu-projeto.appspot.com",
+  messagingSenderId: "000000000000",
+  appId: "1:000000000000:web:xxxxxxxxxxxxxxxxxxxx"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+</script>
+
 <script>
 /* === DATA E TEMA === */
 setInterval(()=>{
@@ -254,81 +271,91 @@ document.getElementById('adminLink').addEventListener('click', function(e){
   window.location.href = 'admin.html';
 });
 
-/* === FUNÇÃO PARA OBTER DADOS DO LOCALSTORAGE === */
-function getChecklists(){
-  const data=[];
-  for(const key in localStorage){
-    if(!isNaN(key)){ 
-      try{
-        const item=JSON.parse(localStorage.getItem(key));
-        if(item && item.data) data.push(item);
-      }catch{}
-    }
+/* === FUNÇÃO PARA OBTER DADOS DO FIRESTORE === */
+async function getChecklists(){
+  const snap = await db.collection('checklists').get();
+  return snap.docs.map(doc => doc.data());
+}
+
+/* helper para comparar datas (YYYY-MM-DD) */
+function getComparableDate(c){
+  const d1 = (c.data || '').slice(0,10);
+  if(d1) return d1;
+  if(c.criadoEm) return c.criadoEm.slice(0,10);
+  return null;
+}
+
+async function initDashboard(){
+  const checklists = await getChecklists();
+
+  /* === TOTAL === */
+  document.getElementById("totalChecklists").textContent = checklists.length;
+
+  /* === GRÁFICO 1 - Checklists por mês === */
+  const meses=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+  const counts = new Array(12).fill(0);
+  checklists.forEach(c=>{
+    let refDate = c.data || c.criadoEm;
+    if(!refDate) return;
+    const d = new Date(refDate);
+    if(isNaN(d)) return;
+    const mes = d.getMonth();
+    if(mes>=0 && mes<12) counts[mes]++;
+  });
+  new Chart(document.getElementById("chart1"),{
+    type:"bar",
+    data:{labels:meses,datasets:[{label:"Checklists",data:counts,backgroundColor:"rgba(0,120,255,0.7)"}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+  });
+
+  /* === GRÁFICO 2 - Veículos por tipo === */
+  const tipos = {carro:0, caminhão:0, trator:0};
+  checklists.forEach(c=>{
+    const t = (c.tipo||"").toLowerCase();
+    if(tipos[t]!==undefined) tipos[t]++;
+  });
+  new Chart(document.getElementById("chart2"),{
+    type:"doughnut",
+    data:{
+      labels:["Carros","Caminhões","Tratores"],
+      datasets:[{
+        data:[tipos.carro, tipos.caminhão, tipos.trator],
+        backgroundColor:[
+          "rgba(0,120,255,0.85)",   // azul principal
+          "rgba(0,180,255,0.75)",   // azul-ciano claro
+          "rgba(0,100,200,0.8)"     // azul mais escuro
+        ],
+        borderWidth:1,
+        hoverOffset:10
+      }]
+    },
+    options:{plugins:{legend:{position:"bottom"}}}
+  });
+
+  /* === GRÁFICO 3 - Checklists últimos 7 dias === */
+  const dias = [];
+  const hoje = new Date();
+  for(let i=6;i>=0;i--){
+    const d = new Date(hoje);
+    d.setDate(hoje.getDate()-i);
+    dias.push(d.toISOString().split("T")[0]); // YYYY-MM-DD
   }
-  return data;
+
+  const contagens = dias.map(day =>{
+    return checklists.filter(c => getComparableDate(c) === day).length;
+  });
+
+  new Chart(document.getElementById("chart3"),{
+    type:"line",
+    data:{
+      labels:dias.map(d=>d.split("-").reverse().slice(0,2).join("/")),
+      datasets:[{label:"Últimos 7 dias",data:contagens,fill:false,borderColor:"#0078ff",tension:0.3}]
+    },
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+  });
 }
 
-const checklists = getChecklists();
-
-/* === TOTAL === */
-document.getElementById("totalChecklists").textContent = checklists.length;
-
-/* === GRÁFICO 1 - Checklists por mês === */
-const meses=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-const counts = new Array(12).fill(0);
-checklists.forEach(c=>{
-  const mes = new Date(c.data).getMonth();
-  if(!isNaN(mes)) counts[mes]++;
-});
-new Chart(document.getElementById("chart1"),{
-  type:"bar",
-  data:{labels:meses,datasets:[{label:"Checklists",data:counts,backgroundColor:"rgba(0,120,255,0.7)"}]},
-  options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
-});
-
-/* === GRÁFICO 2 - Veículos por tipo === */
-const tipos = {carro:0, caminhão:0, trator:0};
-checklists.forEach(c=>{
-  const t = (c.tipo||"").toLowerCase();
-  if(tipos[t]!==undefined) tipos[t]++;
-});
-new Chart(document.getElementById("chart2"),{
-  type:"doughnut",
-  data:{
-    labels:["Carros","Caminhões","Tratores"],
-    datasets:[{
-      data:[tipos.carro, tipos.caminhão, tipos.trator],
-      backgroundColor:[
-        "rgba(0,120,255,0.85)",   // azul principal
-        "rgba(0,180,255,0.75)",   // azul-ciano claro
-        "rgba(0,100,200,0.8)"     // azul mais escuro
-      ],
-      borderWidth:1,
-      hoverOffset:10
-    }]
-  },
-  options:{plugins:{legend:{position:"bottom"}}}
-});
-
-/* === GRÁFICO 3 - Checklists últimos 7 dias === */
-const dias = [];
-const hoje = new Date();
-for(let i=6;i>=0;i--){
-  const d = new Date(hoje);
-  d.setDate(hoje.getDate()-i);
-  dias.push(d.toISOString().split("T")[0]);
-}
-const contagens = dias.map(day =>
-  checklists.filter(c => (c.data||"").startsWith(day)).length
-);
-new Chart(document.getElementById("chart3"),{
-  type:"line",
-  data:{
-    labels:dias.map(d=>d.split("-").reverse().slice(0,2).join("/")),
-    datasets:[{label:"Últimos 7 dias",data:contagens,fill:false,borderColor:"#0078ff",tension:0.3}]
-  },
-  options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
-});
+initDashboard().catch(err=>console.error('Erro ao iniciar dashboard:', err));
 </script>
 </body>
 </html>
