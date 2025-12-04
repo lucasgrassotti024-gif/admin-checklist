@@ -151,7 +151,7 @@ input[type="radio"]:checked::before{
   box-shadow:0 8px 30px rgba(0,0,0,0.7);
 }
 
-/* TABLE / VIEW styles - ensure same look as Excluídos */
+/* TABLE / VIEW styles */
 #viewContainer table th,
 #viewContainer table td {
   border:1px solid var(--border);
@@ -166,30 +166,23 @@ footer{text-align:center;padding:14px;color:var(--muted);font-size:.85rem;
   box-shadow:0 -3px 12px rgba(0,0,0,0.06);}
 .dark footer{background:var(--card);}
 
-/* =========================
-   RESPONSIVIDADE
-   ========================= */
+/* RESPONSIVO */
 @media (max-width: 900px) {
   .wrap {
     padding: 18px;
   }
-
   .list {
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   }
-
   header {
     padding: 12px 18px;
   }
-
   header h1 {
     font-size: 1.15rem;
   }
-
   #datetime {
     font-size: 0.8rem;
   }
-
   nav a {
     margin-left: 14px;
     font-size: 0.95rem;
@@ -202,40 +195,28 @@ footer{text-align:center;padding:14px;color:var(--muted);font-size:.85rem;
     align-items: flex-start;
     gap: 8px;
   }
-
   header > div {
     width: 100%;
     justify-content: space-between;
   }
-
   .wrap {
     padding: 16px 14px;
   }
-
-  .filters {
-    width: 100%;
-    justify-content: center;
-  }
-
   .filters input,
   .filters select {
     width: 100%;
     max-width: 280px;
   }
-
   .list {
     grid-template-columns: 1fr;
   }
-
   .thumb img {
     height: 150px;
   }
-
   #viewContainer {
     padding: 20px;
     max-height: 90vh;
   }
-
   .pdf-actions {
     flex-wrap: wrap;
     justify-content: flex-start;
@@ -246,38 +227,31 @@ footer{text-align:center;padding:14px;color:var(--muted);font-size:.85rem;
   header {
     padding: 10px 12px;
   }
-
   header h1 {
     font-size: 1rem;
   }
-
   #datetime {
     font-size: 0.75rem;
     margin-right: 0;
   }
-
   nav a {
     margin-left: 10px;
     font-size: 0.9rem;
   }
-
   #themeToggle {
     width: 34px;
     height: 34px;
     font-size: 1rem;
     margin-left: 8px;
   }
-
   .meta {
     padding: 12px;
   }
-
   .export-btn,
   .delete-btn {
     padding: 9px;
     font-size: 0.9rem;
   }
-
   #viewContainer {
     border-radius: 14px;
     padding: 16px;
@@ -336,26 +310,24 @@ footer{text-align:center;padding:14px;color:var(--muted);font-size:.85rem;
   © 2025 | Sistema de Checklists — Desenvolvido por <b>Lucas Grassotti Spolavori</b>
 </footer>
 
-<!-- FIREBASE (APP + FIRESTORE) -->
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
-// MESMA CONFIG QUE NO checklist.html
 const firebaseConfig = {
-  apiKey: "SUA_API_KEY_AQUI",
-  authDomain: "seu-projeto.firebaseapp.com",
-  projectId: "seu-projeto-id",
-  storageBucket: "seu-projeto.appspot.com",
-  messagingSenderId: "000000000000",
-  appId: "1:000000000000:web:xxxxxxxxxxxxxxxxxxxx"
+  apiKey: "AIzaSyCxI5gx0LS0ny2y6UnPUCyW0zf1BjnTSco",
+  authDomain: "checklist-rss3.firebaseapp.com",
+  projectId: "checklist-rss3",
+  storageBucket: "checklist-rss3.appspot.com",
+  messagingSenderId: "179261205524",
+  appId: "1:179261205524:web:376152c3b94fb115f14b01",
+  measurementId: "G-47CPMQ3ZTC"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 </script>
 
 <script>
-/* elementos */
 const filtroMes = document.getElementById('filtroMes');
 const filtroPlaca = document.getElementById('filtroPlaca');
 const list = document.getElementById('list');
@@ -405,7 +377,6 @@ async function carregarLista(){
   let count = 0;
 
   try{
-    // busca todos os checklists, ordenados por data de criação (mais recentes primeiro)
     const snap = await db.collection('checklists')
       .orderBy('criadoEm', 'desc')
       .get();
@@ -451,7 +422,6 @@ async function carregarLista(){
         </div>
       `;
 
-      // botão PDF (no card) -> abre modal e mostra pdfActions
       el.querySelector('.export-btn').onclick = (e) => {
         e.stopPropagation();
         abrirVis(d);
@@ -460,14 +430,11 @@ async function carregarLista(){
         pdfSem.onclick = ()=>{ gerarPDF(d, false); pdfActions.style.display='none'; };
       };
 
-      // excluir -> mover para coleção "checklistsExcluidos" no Firestore
       el.querySelector('.delete-btn').onclick = async (e) => {
         e.stopPropagation();
         if(confirm('Mover este checklist para Excluídos?')){
           try {
-            // adiciona na coleção de excluídos
             await db.collection('checklistsExcluidos').add(d);
-            // remove da coleção principal
             await db.collection('checklists').doc(d.id).delete();
 
             carregarLista();
@@ -479,7 +446,6 @@ async function carregarLista(){
         }
       };
 
-      // clique no card -> abrir modal (visualização)
       el.onclick = ()=> {
         abrirVis(d);
         pdfActions.style.display = 'flex';
@@ -505,7 +471,6 @@ btnVoltarView.onclick = ()=> {
   pdfActions.style.display = 'none';
 };
 
-/* abrirVis: usa markup empilhado (igual Excluídos) */
 function abrirVis(d){
   let html = `
   <div style="display:flex;flex-direction:column;gap:14px;">
@@ -585,7 +550,6 @@ function abrirVis(d){
   viewContent.innerHTML = html;
   viewScreen.style.display = 'flex';
 
-  // zoom imagens
   document.querySelectorAll('.foto').forEach(img=>{
     img.addEventListener('click', ()=>{
       const overlay = document.createElement('div');
@@ -599,7 +563,6 @@ function abrirVis(d){
   });
 }
 
-/* gerarPDF (usa dados já carregados) */
 function gerarPDF(d, incluirImagens){
   try{
     if(!window.jspdf) { showToast('jsPDF não encontrado','#dc3545'); return; }
@@ -627,7 +590,6 @@ function gerarPDF(d, incluirImagens){
     pdf.text(obsLines, 50, y);
     y += obsLines.length * 14 + 12;
 
-    // símbolo simples para marcar (melhor compatibilidade)
     const circleSymbol = 'o';
 
     const pdfBody = Object.entries(d.itens || {}).map(([item, val]) => [
@@ -670,13 +632,11 @@ function gerarPDF(d, incluirImagens){
   }
 }
 
-/* escape */
 function escapeHtml(s){
   if(!s && s !== 0) return "";
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-/* inicializa */
 carregarLista();
 </script>
 </body>
