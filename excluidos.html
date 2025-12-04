@@ -7,10 +7,6 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
 
-<!-- jsPDF (se algum dia quiser gerar PDF daqui também) -->
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-
 <style>
 :root {
   --primary:#0078ff;
@@ -117,7 +113,7 @@ nav a:hover::after{width:100%;}
   cursor:pointer;margin-bottom:10px;
 }
 
-/* TABELA / RADIOS (mesma aparência do Admin) */
+/* TABELA / RADIOS */
 #viewContainer table th,
 #viewContainer table td {
   border:1px solid var(--border);
@@ -126,7 +122,6 @@ nav a:hover::after{width:100%;}
 }
 #viewContainer table th { background:var(--primary); color:#fff; text-align:left; }
 
-/* radios */
 input[type="radio"] {
   appearance:none; -webkit-appearance:none;
   width:18px;height:18px;border:2px solid var(--primary);border-radius:50%;
@@ -153,30 +148,23 @@ footer{text-align:center;padding:14px;color:var(--muted);font-size:.85rem;
   box-shadow:0 -3px 12px rgba(0,0,0,0.06);}
 .dark footer{background:var(--card);}
 
-/* =========================
-   RESPONSIVIDADE
-   ========================= */
+/* RESPONSIVO */
 @media (max-width: 900px) {
   .wrap {
     padding: 20px 18px;
   }
-
   .list {
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   }
-
   header {
     padding: 12px 18px;
   }
-
   header h1 {
     font-size: 1.15rem;
   }
-
   #datetime {
     font-size: 0.8rem;
   }
-
   nav a {
     margin-left: 14px;
     font-size: 0.95rem;
@@ -189,46 +177,33 @@ footer{text-align:center;padding:14px;color:var(--muted);font-size:.85rem;
     align-items: flex-start;
     gap: 8px;
   }
-
   header > div {
     width: 100%;
     display:flex;
     align-items:center;
     justify-content: space-between;
   }
-
   .wrap {
     padding: 18px 14px;
   }
-
-  .filters {
-    width: 100%;
-    justify-content: center;
-  }
-
   .filters input,
   .filters select {
     width: 100%;
     max-width: 280px;
   }
-
   .list {
     grid-template-columns: 1fr;
   }
-
   .thumb img {
     height: 150px;
   }
-
   #viewContainer {
     padding: 20px;
     max-height: 90vh;
   }
-
   .meta {
     padding: 12px;
   }
-
   .delete-btn {
     padding: 9px;
     font-size: 0.9rem;
@@ -239,28 +214,23 @@ footer{text-align:center;padding:14px;color:var(--muted);font-size:.85rem;
   header {
     padding: 10px 12px;
   }
-
   header h1 {
     font-size: 1rem;
   }
-
   #datetime {
     font-size: 0.75rem;
     margin-right: 0;
   }
-
   nav a {
     margin-left: 10px;
     font-size: 0.9rem;
   }
-
   #themeToggle {
     width: 34px;
     height: 34px;
     font-size: 1rem;
     margin-left: 8px;
   }
-
   #viewContainer {
     border-radius: 14px;
     padding: 16px;
@@ -318,14 +288,14 @@ footer{text-align:center;padding:14px;color:var(--muted);font-size:.85rem;
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
-// MESMA CONFIG QUE NO checklist.html e admin.html
 const firebaseConfig = {
-  apiKey: "SUA_API_KEY_AQUI",
-  authDomain: "seu-projeto.firebaseapp.com",
-  projectId: "seu-projeto-id",
-  storageBucket: "seu-projeto.appspot.com",
-  messagingSenderId: "000000000000",
-  appId: "1:000000000000:web:xxxxxxxxxxxxxxxxxxxx"
+  apiKey: "AIzaSyCxI5gx0LS0ny2y6UnPUCyW0zf1BjnTSco",
+  authDomain: "checklist-rss3.firebaseapp.com",
+  projectId: "checklist-rss3",
+  storageBucket: "checklist-rss3.appspot.com",
+  messagingSenderId: "179261205524",
+  appId: "1:179261205524:web:376152c3b94fb115f14b01",
+  measurementId: "G-47CPMQ3ZTC"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
@@ -547,7 +517,6 @@ function abrirVis(d){
   });
 }
 
-/* Escapar caracteres */
 function escapeHtml(s){
   if(!s) return "";
   return String(s)
