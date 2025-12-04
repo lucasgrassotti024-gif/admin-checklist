@@ -15,7 +15,7 @@
         margin: 0;
         padding: 0;
         background: linear-gradient(135deg, #0078ff, #00b4ff);
-        height: 100vh;
+        min-height: 100vh;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -24,7 +24,7 @@
     #login-box {
         width: 330px;
         max-width: 92vw;
-        padding: 28px;
+        padding: 28px 24px;
         background: rgba(255, 255, 255, 0.12);
         border-radius: 16px;
         backdrop-filter: blur(16px);
@@ -106,12 +106,30 @@
     @media (max-width: 480px) {
         #login-box {
             padding: 22px 18px;
+            border-radius: 14px;
         }
         h2 {
             font-size: 20px;
         }
+        input {
+            font-size: 14px;
+            padding: 11px 38px 11px 11px;
+        }
         button {
             font-size: 15px;
+            padding: 11px;
+        }
+    }
+
+    @media (max-width: 360px) {
+        #login-box {
+            padding: 20px 14px;
+        }
+        h2 {
+            font-size: 18px;
+        }
+        .eye {
+            right: 10px;
         }
     }
 </style>
@@ -131,23 +149,6 @@
 
     <div id="erro">Senha incorreta.</div>
 </div>
-
-<!-- FIREBASE (caso queira usar futuramente) -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCxI5gx0LS0ny2y6UnPUCyW0zf1BjnTSco",
-  authDomain: "checklist-rss3.firebaseapp.com",
-  projectId: "checklist-rss3",
-  storageBucket: "checklist-rss3.appspot.com",
-  messagingSenderId: "179261205524",
-  appId: "1:179261205524:web:376152c3b94fb115f14b01",
-  measurementId: "G-47CPMQ3ZTC"
-};
-firebase.initializeApp(firebaseConfig);
-// se quiser no futuro: const db = firebase.firestore();
-</script>
 
 <script>
 function logar() {
