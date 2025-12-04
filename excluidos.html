@@ -11,7 +11,7 @@
 :root {
   --primary:#0078ff;
   --accent:#00b4ff;
-  --bg:#f5f8fb;
+  --bg:#ffffff;
   --white:#ffffff;
   --card:#ffffff;
   --text:#1a1a1a;
@@ -20,16 +20,16 @@
   --shadow:0 8px 28px rgba(0,0,0,0.08);
 }
 .dark {
-  --bg:#0f1419;
-  --white:#1b2128;
-  --card:#1e252d;
+  --bg:#0b1120;
+  --white:#111827;
+  --card:#111827;
   --text:#e9eef5;
   --muted:#a7b0bc;
-  --border:#2b3139;
+  --border:#1f2937;
   --shadow:0 4px 16px rgba(0,0,0,0.6);
 }
 
-*{box-sizing:border-box;font-family:"Inter",sans-serif;transition:all .25s ease;}
+*{box-sizing:border-box;font-family:"Inter",sans-serif;transition:background-color .25s ease,color .25s ease,border-color .25s ease;}
 body{margin:0;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100vh;}
 
 /* HEADER */
@@ -42,7 +42,7 @@ header{
   border-bottom:1px solid var(--border);
   box-shadow:var(--shadow);
 }
-.dark header{background:rgba(30,37,45,0.85);}
+.dark header{background:var(--card);}
 header h1{font-family:"Outfit";font-weight:800;font-size:1.3rem;color:var(--primary);margin:0;}
 
 nav a{
@@ -451,17 +451,18 @@ function abrirVis(d){
     </div>
 
     <h3 style="margin-top:10px;color:var(--primary);font-family:'Outfit';">Itens Inspecionados</h3>
-    <table style="width:100%;border-collapse:collapse;margin-top:6px;">
-      <thead>
-        <tr>
-          <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);text-align:left;">Item</th>
-          <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);">OK</th>
-          <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);">Regular</th>
-          <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);">Ruim</th>
-          <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);text-align:left;">Observação</th>
-        </tr>
-      </thead>
-      <tbody>
+    <div style="width:100%;overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;margin-top:6px;min-width:640px;">
+        <thead>
+          <tr>
+            <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);text-align:left;">Item</th>
+            <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);">OK</th>
+            <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);">Regular</th>
+            <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);">Ruim</th>
+            <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);text-align:left;">Observação</th>
+          </tr>
+        </thead>
+        <tbody>
   `;
 
   if(d.itens){
@@ -483,8 +484,9 @@ function abrirVis(d){
   }
 
   html += `
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
 
     <div><strong>Fotos do veículo:</strong>
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;">
@@ -517,6 +519,7 @@ function abrirVis(d){
   });
 }
 
+/* Escapar caracteres */
 function escapeHtml(s){
   if(!s) return "";
   return String(s)
