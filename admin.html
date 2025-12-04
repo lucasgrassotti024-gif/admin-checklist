@@ -15,7 +15,7 @@
 :root {
   --primary:#0078ff;
   --accent:#00b4ff;
-  --bg:#f5f8fb;
+  --bg:#ffffff;
   --white:#ffffff;
   --card:#ffffff;
   --text:#1a1a1a;
@@ -24,16 +24,16 @@
   --shadow:0 8px 28px rgba(0,0,0,0.08);
 }
 .dark {
-  --bg:#0f1419;
-  --white:#1b2128;
-  --card:#1e252d;
+  --bg:#0b1120;
+  --white:#111827;
+  --card:#111827;
   --text:#e9eef5;
   --muted:#a7b0bc;
-  --border:#2b3139;
+  --border:#1f2937;
   --shadow:0 4px 16px rgba(0,0,0,0.6);
 }
 
-*{box-sizing:border-box;font-family:"Inter",sans-serif;transition:all .25s ease;}
+*{box-sizing:border-box;font-family:"Inter",sans-serif;transition:background-color .25s ease,color .25s ease,border-color .25s ease;}
 body{margin:0;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100vh;}
 
 /* HEADER */
@@ -46,7 +46,7 @@ header{
   border-bottom:1px solid var(--border);
   box-shadow:var(--shadow);
 }
-.dark header{background:rgba(30,37,45,0.85);}
+.dark header{background:var(--card);}
 header h1{font-family:"Outfit";font-weight:800;font-size:1.3rem;color:var(--primary);margin:0;}
 
 nav a{
@@ -91,7 +91,7 @@ nav a:hover::after{width:100%;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .thumb img{width:100%;height:160px;object-fit:cover;display:block;border-bottom:1px solid var(--border);}
 .meta{padding:14px;}
-.actions{display:flex;gap:8px;margin-top:10px;}
+.actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
 .export-btn,.delete-btn{flex:1;border:none;padding:10px;border-radius:10px;font-weight:600;cursor:pointer;}
 .export-btn{background:var(--primary);color:#fff;}
 .delete-btn{background:#dc3545;color:#fff;}
@@ -135,7 +135,7 @@ input[type="radio"]:checked::before{
 #btnVoltarView{background:none;border:none;font-size:1.8rem;color:var(--primary);cursor:pointer;margin-bottom:10px;}
 
 /* PDF buttons area */
-.pdf-actions{display:flex;gap:8px;justify-content:flex-end;margin-bottom:8px;}
+.pdf-actions{display:flex;gap:8px;justify-content:flex-end;margin-bottom:8px;flex-wrap:wrap;}
 .pdf-actions button{padding:8px 12px;border-radius:8px;border:none;cursor:pointer;font-weight:700;}
 #pdfCom{background:var(--primary);color:#fff;}
 #pdfSem{background:#444;color:#fff;}
@@ -167,95 +167,43 @@ footer{text-align:center;padding:14px;color:var(--muted);font-size:.85rem;
 .dark footer{background:var(--card);}
 
 /* RESPONSIVO */
-@media (max-width: 900px) {
-  .wrap {
-    padding: 18px;
+@media (max-width: 900px){
+  .wrap{padding:20px 18px;}
+  header{padding:12px 18px;}
+  header h1{font-size:1.2rem;}
+}
+
+@media (max-width: 650px){
+  header{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:8px;
   }
-  .list {
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  header > div{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    row-gap:6px;
   }
-  header {
-    padding: 12px 18px;
+  nav a{
+    margin-left:12px;
+    font-size:.95rem;
   }
-  header h1 {
-    font-size: 1.15rem;
-  }
-  #datetime {
-    font-size: 0.8rem;
-  }
-  nav a {
-    margin-left: 14px;
-    font-size: 0.95rem;
+  #datetime{
+    font-size:.8rem;
+    margin-right:0;
   }
 }
 
-@media (max-width: 600px) {
-  header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-  }
-  header > div {
-    width: 100%;
-    justify-content: space-between;
-  }
-  .wrap {
-    padding: 16px 14px;
-  }
-  .filters input,
-  .filters select {
-    width: 100%;
-    max-width: 280px;
-  }
-  .list {
-    grid-template-columns: 1fr;
-  }
-  .thumb img {
-    height: 150px;
-  }
-  #viewContainer {
-    padding: 20px;
-    max-height: 90vh;
-  }
-  .pdf-actions {
-    flex-wrap: wrap;
-    justify-content: flex-start;
-  }
-}
-
-@media (max-width: 420px) {
-  header {
-    padding: 10px 12px;
-  }
-  header h1 {
-    font-size: 1rem;
-  }
-  #datetime {
-    font-size: 0.75rem;
-    margin-right: 0;
-  }
-  nav a {
-    margin-left: 10px;
-    font-size: 0.9rem;
-  }
-  #themeToggle {
-    width: 34px;
-    height: 34px;
-    font-size: 1rem;
-    margin-left: 8px;
-  }
-  .meta {
-    padding: 12px;
-  }
-  .export-btn,
-  .delete-btn {
-    padding: 9px;
-    font-size: 0.9rem;
-  }
-  #viewContainer {
-    border-radius: 14px;
-    padding: 16px;
-  }
+@media (max-width: 480px){
+  .wrap{padding:18px 12px;}
+  header{padding:10px 12px;}
+  header h1{font-size:1.05rem;}
+  #themeToggle{width:34px;height:34px;font-size:1rem;margin-left:10px;}
+  .thumb img{height:150px;}
+  .export-btn,.delete-btn{font-size:.9rem;padding:9px;}
 }
 </style>
 </head>
@@ -263,7 +211,7 @@ footer{text-align:center;padding:14px;color:var(--muted);font-size:.85rem;
 <body>
 <header>
   <h1>Administração</h1>
-  <div style="display:flex;align-items:center;gap:14px">
+  <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
     <span id="datetime"></span>
     <button id="themeToggle">🌙</button>
     <nav>
@@ -328,6 +276,7 @@ const db = firebase.firestore();
 </script>
 
 <script>
+/* elementos */
 const filtroMes = document.getElementById('filtroMes');
 const filtroPlaca = document.getElementById('filtroPlaca');
 const list = document.getElementById('list');
@@ -369,7 +318,7 @@ function showToast(msg, color="var(--primary)"){
 }
 
 /* filtros */
-filtroMes.onchange = filtroPlaca.oninput = () => carregarLista();
+filtroMes.onchange = filtroPlaca.oninput = carregarLista;
 
 /* carregar checklists do Firestore */
 async function carregarLista(){
@@ -378,15 +327,15 @@ async function carregarLista(){
 
   try{
     const snap = await db.collection('checklists')
-      .orderBy('criadoEm', 'desc')
+      .orderBy('criadoEm','desc')
       .get();
 
-    const dados = snap.docs.map(doc => ({
+    const dados = snap.docs.map(doc=>({
       id: doc.id,
       ...doc.data()
     }));
 
-    dados.forEach(d => {
+    dados.forEach(d=>{
       if(!d || Object.keys(d).length === 0) return;
 
       if(filtroMes.value && !(d.data||"").includes(filtroMes.value)) return;
@@ -422,6 +371,7 @@ async function carregarLista(){
         </div>
       `;
 
+      // botão PDF (no card)
       el.querySelector('.export-btn').onclick = (e) => {
         e.stopPropagation();
         abrirVis(d);
@@ -430,13 +380,13 @@ async function carregarLista(){
         pdfSem.onclick = ()=>{ gerarPDF(d, false); pdfActions.style.display='none'; };
       };
 
+      // excluir -> mover para excluídos
       el.querySelector('.delete-btn').onclick = async (e) => {
         e.stopPropagation();
         if(confirm('Mover este checklist para Excluídos?')){
           try {
             await db.collection('checklistsExcluidos').add(d);
             await db.collection('checklists').doc(d.id).delete();
-
             carregarLista();
             showToast('🗑️ Movido para Excluídos', '#dc3545');
           } catch(err){
@@ -446,6 +396,7 @@ async function carregarLista(){
         }
       };
 
+      // clique no card -> abrir modal
       el.onclick = ()=> {
         abrirVis(d);
         pdfActions.style.display = 'flex';
@@ -460,8 +411,8 @@ async function carregarLista(){
     empty.style.display = count ? 'none' : 'block';
   }catch(err){
     console.error('Erro ao carregar checklists:', err);
-    showToast('Erro ao carregar checklists', '#dc3545');
     empty.style.display = 'block';
+    showToast('Erro ao carregar checklists','#dc3545');
   }
 }
 
@@ -471,6 +422,7 @@ btnVoltarView.onclick = ()=> {
   pdfActions.style.display = 'none';
 };
 
+/* abrirVis: visualização detalhada */
 function abrirVis(d){
   let html = `
   <div style="display:flex;flex-direction:column;gap:14px;">
@@ -497,17 +449,18 @@ function abrirVis(d){
     </div>
 
     <h3 style="margin-top:10px;color:var(--primary);font-family:'Outfit';">Itens Inspecionados</h3>
-    <table style="width:100%;border-collapse:collapse;margin-top:6px;">
-      <thead>
-        <tr>
-          <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);text-align:left;">Item</th>
-          <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);">OK</th>
-          <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);">Regular</th>
-          <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);">Ruim</th>
-          <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);text-align:left;">Observação</th>
-        </tr>
-      </thead>
-      <tbody>
+    <div style="width:100%;overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;margin-top:6px;min-width:640px;">
+        <thead>
+          <tr>
+            <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);text-align:left;">Item</th>
+            <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);">OK</th>
+            <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);">Regular</th>
+            <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);">Ruim</th>
+            <th style="background:var(--primary);color:#fff;padding:8px;border:1px solid var(--border);text-align:left;">Observação</th>
+          </tr>
+        </thead>
+        <tbody>
   `;
 
   if(d.itens){
@@ -529,8 +482,9 @@ function abrirVis(d){
   }
 
   html += `
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
 
     <div><strong>Fotos do veículo:</strong>
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;">
@@ -550,6 +504,7 @@ function abrirVis(d){
   viewContent.innerHTML = html;
   viewScreen.style.display = 'flex';
 
+  // zoom imagens
   document.querySelectorAll('.foto').forEach(img=>{
     img.addEventListener('click', ()=>{
       const overlay = document.createElement('div');
@@ -563,6 +518,7 @@ function abrirVis(d){
   });
 }
 
+/* gerarPDF (mantém lógica original com círculo simples 'o') */
 function gerarPDF(d, incluirImagens){
   try{
     if(!window.jspdf) { showToast('jsPDF não encontrado','#dc3545'); return; }
@@ -592,18 +548,26 @@ function gerarPDF(d, incluirImagens){
 
     const circleSymbol = 'o';
 
-    const pdfBody = Object.entries(d.itens || {}).map(([item, val]) => [
-      item,
-      val === "OK" ? circleSymbol : "",
-      val === "Regular" ? circleSymbol : "",
-      val === "Ruim" ? circleSymbol : "",
-      (d.observacoesItens && d.observacoesItens[item]) ? d.observacoesItens[item] : ""
-    ]);
+    const body = [];
+    if(d.itens){
+      Object.entries(d.itens).forEach(([item, val]) => {
+        const obs = (d.observacoesItens && d.observacoesItens[item])
+          ? d.observacoesItens[item]
+          : (d.observacoes && d.observacoes[item] ? d.observacoes[item] : '');
+        body.push([
+          item,
+          val==="OK" ? circleSymbol : "",
+          val==="Regular" ? circleSymbol : "",
+          val==="Ruim" ? circleSymbol : "",
+          obs
+        ]);
+      });
+    }
 
     pdf.autoTable({
       startY: y,
       head: [["Item", "OK", "Regular", "Ruim", "Observação"]],
-      body: pdfBody,
+      body: body,
       theme: "grid",
       styles: { fontSize: 11, cellPadding: 5 },
       headStyles: { fillColor: [0, 120, 255], textColor: 255 }
@@ -632,11 +596,13 @@ function gerarPDF(d, incluirImagens){
   }
 }
 
+/* escape */
 function escapeHtml(s){
   if(!s && s !== 0) return "";
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+/* inicializa */
 carregarLista();
 </script>
 </body>
