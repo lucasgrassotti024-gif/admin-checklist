@@ -156,10 +156,23 @@ footer{
   </div>
 
   <div class="grid">
-    <div class="card"><canvas id="chart1"></canvas></div>
-    <div class="card"><canvas id="chart2"></canvas></div>
-    <div class="card"><canvas id="chart3"></canvas></div>
+
+  <div class="card">
+      <h3>🚛 Veículos com mais problemas</h3>
+      <canvas id="chartVeiculos"></canvas>
   </div>
+
+  <div class="card">
+      <h3>📊 Pareto de defeitos</h3>
+      <canvas id="chartPareto"></canvas>
+  </div>
+
+  <div class="card">
+      <h3>📈 Evolução semanal</h3>
+      <canvas id="chartSemanal"></canvas>
+  </div>
+
+</div>
 </div>
 
 <footer>
@@ -219,80 +232,280 @@ async function getChecklists(){
 (async function initDashboard(){
   const checklists = await getChecklists();
 
-  /* TOTAL */
   document.getElementById("totalChecklists").textContent = checklists.length;
 
-  /* GRÁFICO 1 - Checklists por mês */
-  const meses=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-  const counts = new Array(12).fill(0);
-  checklists.forEach(c=>{
-    let mes = NaN;
-    if(c.data){
-      const d = new Date(c.data);
-      if(!isNaN(d)) mes = d.getMonth();
-    }
-    if(isNaN(mes) && c.criadoEm){
-      const d2 = new Date(c.criadoEm);
-      if(!isNaN(d2)) mes = d2.getMonth();
-    }
-    if(!isNaN(mes)) counts[mes]++;
-  });
-  new Chart(document.getElementById("chart1"),{
-    type:"bar",
-    data:{labels:meses,datasets:[{label:"Checklists",data:counts,backgroundColor:"rgba(0,120,255,0.7)"}]},
-    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
-  });
+  criarGraficoVeiculos(checklists);
+criarGraficoPareto(checklists);
+criarGraficoSemanal(checklists);
 
-  /* GRÁFICO 2 - Veículos por tipo */
-  const tipos = {carro:0, caminhão:0, trator:0};
-  checklists.forEach(c=>{
-    const t = (c.tipo||"").toLowerCase();
-    if(t.includes("carro")) tipos.carro++;
-    else if(t.includes("caminh")) tipos.caminhão++;
-    else if(t.includes("trator")) tipos.trator++;
-  });
-  new Chart(document.getElementById("chart2"),{
-    type:"doughnut",
-    data:{
-      labels:["Carros","Caminhões","Tratores"],
-      datasets:[{
-        data:[tipos.carro, tipos.caminhão, tipos.trator],
-        backgroundColor:[
-          "rgba(0,120,255,0.85)",
-          "rgba(0,180,255,0.75)",
-          "rgba(0,100,200,0.8)"
-        ],
-        borderWidth:1,
-        hoverOffset:10
-      }]
-    },
-    options:{plugins:{legend:{position:"bottom"}}}
-  });
-
-  /* GRÁFICO 3 - Checklists últimos 7 dias */
-  const dias = [];
-  const hoje = new Date();
-  for(let i=6;i>=0;i--){
-    const d = new Date(hoje);
-    d.setDate(hoje.getDate()-i);
-    dias.push(d.toISOString().split("T")[0]); // yyyy-mm-dd
-  }
-  const contagens = dias.map(day =>
-    checklists.filter(c => {
-      const dataStr = (c.data||"").toString();
-      const criadoStr = (c.criadoEm||"").toString();
-      return dataStr.startsWith(day) || criadoStr.startsWith(day);
-    }).length
-  );
-  new Chart(document.getElementById("chart3"),{
-    type:"line",
-    data:{
-      labels:dias.map(d=>d.split("-").reverse().slice(0,2).join("/")),
-      datasets:[{label:"Últimos 7 dias",data:contagens,fill:false,borderColor:"#0078ff",tension:0.3}]
-    },
-    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
-  });
 })();
+
+function criarGraficoVeiculos(checklists){
+
+    const veiculos = {};
+
+    checklists.forEach(checklist => {
+
+        const placa = checklist.placa || "Sem placa";
+
+        if(!veiculos[placa]){
+            veiculos[placa] = 0;
+        }
+
+        if(checklist.itens){
+
+            Object.values(checklist.itens).forEach(status => {
+
+                if(status === "Ruim"){
+                    veiculos[placa]++;
+                }
+
+            });
+
+        }
+
+    });
+
+    const ranking = Object.entries(veiculos)
+        .sort((a,b)=>b[1]-a[1])
+        .slice(0,10);
+
+    new Chart(document.getElementById("chartVeiculos"),{
+
+        type:"bar",
+
+        data:{
+            labels: ranking.map(v=>v[0]),
+            datasets:[{
+                label:"Ocorrências",
+                data: ranking.map(v=>v[1])
+            }]
+        },
+
+        options:{
+            indexAxis:"y",
+            responsive:true,
+            plugins:{
+                legend:{
+                    display:false
+                }
+            },
+            scales:{
+                x:{
+                    beginAtZero:true
+                }
+            }
+        }
+
+    });
+
+}
+
+function criarGraficoPareto(checklists){
+
+    const defeitos = {};
+
+    checklists.forEach(checklist=>{
+
+        if(!checklist.itens) return;
+
+        Object.entries(checklist.itens).forEach(([item,status])=>{
+
+            if(status==="Ruim"){
+
+                if(!defeitos[item]){
+                    defeitos[item]=0;
+                }
+
+                defeitos[item]++;
+
+            }
+
+        });
+
+    });
+
+    const ranking = Object.entries(defeitos)
+        .sort((a,b)=>b[1]-a[1]);
+
+    const labels = ranking.map(i=>i[0]);
+    const valores = ranking.map(i=>i[1]);
+
+    const total = valores.reduce((a,b)=>a+b,0);
+
+if(total === 0){
+    return;
+}
+
+    let soma = 0;
+
+    const acumulado = valores.map(v=>{
+        soma += v;
+        return (soma/total)*100;
+    });
+
+    new Chart(document.getElementById("chartPareto"),{
+
+        data:{
+
+            labels:labels,
+
+            datasets:[
+
+                {
+                    type:"bar",
+                    label:"Ocorrências",
+                    data:valores
+                },
+
+                {
+                    type:"line",
+                    label:"Acumulado %",
+                    data:acumulado,
+                    yAxisID:"y1"
+                }
+
+            ]
+
+        },
+
+        options:{
+
+            responsive:true,
+
+            scales:{
+
+                y:{
+                    beginAtZero:true
+                },
+
+                y1:{
+                    position:"right",
+                    min:0,
+                    max:100
+                }
+
+            }
+
+        }
+
+    });
+
+} 
+
+function criarGraficoSemanal(checklists){
+
+    const semanas = {};
+
+    checklists.forEach(checklist=>{
+
+        if(!checklist.data || !checklist.itens) return;
+
+        const data = new Date(checklist.data);
+
+        if(isNaN(data)) return;
+
+        const inicioAno = new Date(data.getFullYear(),0,1);
+
+        const dias = Math.floor((data - inicioAno)/(1000*60*60*24));
+
+        const semana = Math.ceil((dias + inicioAno.getDay() + 1)/7);
+
+        const chave = `${data.getFullYear()}-S${semana}`;
+
+        if(!semanas[chave]){
+            semanas[chave]={
+                OK:0,
+                Regular:0,
+                Ruim:0
+            };
+        }
+
+        Object.values(checklist.itens).forEach(status=>{
+
+            if(status==="OK"){
+                semanas[chave].OK++;
+            }
+
+            else if(status==="Regular"){
+                semanas[chave].Regular++;
+            }
+
+            else if(status==="Ruim"){
+                semanas[chave].Ruim++;
+            }
+
+        });
+
+    });
+
+    const labels = Object.keys(semanas).sort();
+
+    const ok = labels.map(s=>semanas[s].OK);
+    const regular = labels.map(s=>semanas[s].Regular);
+    const ruim = labels.map(s=>semanas[s].Ruim);
+
+    new Chart(document.getElementById("chartSemanal"),{
+
+        type:"line",
+
+        data:{
+
+            labels:labels,
+
+            datasets:[
+
+                {
+                    label:"OK",
+                    data:ok,
+                    borderColor:"green",
+                    backgroundColor:"green",
+                    tension:.3
+                },
+
+                {
+                    label:"Regular",
+                    data:regular,
+                    borderColor:"orange",
+                    backgroundColor:"orange",
+                    tension:.3
+                },
+
+                {
+                    label:"Ruim",
+                    data:ruim,
+                    borderColor:"red",
+                    backgroundColor:"red",
+                    tension:.3
+                }
+
+            ]
+
+        },
+
+        options:{
+
+            responsive:true,
+
+            interaction:{
+                mode:"index",
+                intersect:false
+            },
+
+            scales:{
+                y:{
+                    beginAtZero:true
+                }
+            }
+
+        }
+
+    });
+
+}
+
+  
+  
 </script>
 </body>
 </html>
