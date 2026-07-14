@@ -63,8 +63,38 @@ nav a::after{
 }
 nav a:hover::after{width:100%;}
 
-.wrap{max-width:1100px;margin:auto;padding:24px;flex:1;}
-.grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));}
+.wrap{
+    max-width:1600px;
+    width:95%;
+    margin:auto;
+    padding:24px;
+    flex:1;
+}
+  
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+}
+
+.card-grande{
+    grid-column:1 / -1;
+    min-height:650px;
+}
+
+.card-grande canvas{
+    height:560px !important;
+} 
+
+.card{
+    min-height:520px;
+}
+
+.card canvas{
+    width:100% !important;
+    height:430px !important;
+}
+  
 .card{
   background:var(--white);
   border-radius:14px;
@@ -155,25 +185,27 @@ footer{
     <span id="totalChecklists">0</span>
   </div>
 
-  <div class="grid">
+ <div class="grid">
 
-  <div class="card">
-      <h3>🚛 Veículos com mais problemas</h3>
-      <canvas id="chartVeiculos"></canvas>
-  </div>
+    <div class="card">
+        <h3>🚛 Veículos com mais problemas</h3>
+        <canvas id="chartVeiculos"></canvas>
+    </div>
 
-  <div class="card">
-      <h3>📊 Pareto de defeitos</h3>
-      <canvas id="chartPareto"></canvas>
-  </div>
+    <div class="card">
+        <h3>📊 Pareto de defeitos</h3>
+        <canvas id="chartPareto"></canvas>
+    </div>
 
-  <div class="card">
-      <h3>📈 Evolução semanal</h3>
-      <canvas id="chartSemanal"></canvas>
-  </div>
+    <div class="card card-grande">
+        <h3>📈 Evolução semanal</h3>
+        <canvas id="chartSemanal"></canvas>
+    </div>
 
 </div>
+
 </div>
+
 
 <footer>
   © 2025 | Sistema de Checklists — Desenvolvido por <b>Lucas Grassotti Spolavori</b>
