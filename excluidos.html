@@ -474,6 +474,10 @@ async function carregarLista(){
 
       el.querySelector(".delete-btn").onclick=async e=>{
         e.stopPropagation();
+
+        console.log("ID:", d.id);
+        console.log(d);
+        
         if(confirm("Excluir definitivamente este checklist?")){
           try{
             await db.collection('checklistsExcluidos').doc(d.id).delete();
