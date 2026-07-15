@@ -235,28 +235,18 @@ footer{text-align:center;padding:14px;color:var(--muted);font-size:.85rem;
 }
 
 .sidebar{
-
     position:fixed;
     top:0;
     left:0;
-
     width:250px;
     height:100vh;
-
     background:#0b1120;
     color:#fff;
-
     padding:25px 20px;
-
     display:flex;
     flex-direction:column;
-
     overflow-y:auto;
-
-    transition:.25s;
-
     z-index:1000;
-
 }
 
   .sidebar h2{
@@ -265,31 +255,11 @@ footer{text-align:center;padding:14px;color:var(--muted);font-size:.85rem;
 }
 
 .sidebar h4{
-
-.sidebar a{
-    color:white;
-    text-decoration:none;
-    padding:12px 14px;
-    border-radius:10px;
-    margin-bottom:6px;
-    transition:.2s;
-    display:flex;
-    align-items:center;
-    gap:14px;
-    white-space:nowrap;
-}
-
-  .icon{
-    width:26px;
-    text-align:center;
-    font-size:22px;
-    flex-shrink:0;
-}
-
-.texto{
-
-    transition:.25s;
-
+    margin:25px 0 10px;
+    font-size:12px;
+    color:#9ca3af;
+    text-transform:uppercase;
+    letter-spacing:1px;
 }
 
  .sidebar a.active{
@@ -309,49 +279,6 @@ footer{text-align:center;padding:14px;color:var(--muted);font-size:.85rem;
     margin-left:250px;
     transition:.25s;
 }
-
-#menuBtn{
-    width:42px;
-    height:42px;
-    border:none;
-    border-radius:10px;
-    background:var(--card);
-    color:var(--text);
-    cursor:pointer;
-    font-size:22px;
-    box-shadow:var(--shadow);
-}
-
-#menuBtn:hover{
-    transform:scale(1.05);
-}
-
-.sidebar.fechada{
-    width:75px;
-}
-.sidebar.fechada h2,
-  
-.sidebar.fechada h4{
-    display:none;
-}
-
-.sidebar.fechada{
-    width:80px;
-}
-
-.sidebar.fechada h2,
-.sidebar.fechada h4{
-    display:none;
-}
-
-.sidebar.fechada .texto{
-    display:none;
-}
-
-.sidebar.fechada a{
-    justify-content:center;
-    padding:14px;
-}
   
 </style>
 </head>
@@ -364,34 +291,19 @@ footer{text-align:center;padding:14px;color:var(--muted);font-size:.85rem;
 
 <h2>🚗 Sistema</h2>
 
-<a href="dashboard.html">
-    <span class="icon">📊</span>
-    <span class="texto">Dashboard</span>
-</a>
-
+<a href="dashboard.html">📊 Dashboard</a>
+  
 <h4>CHECKLISTS</h4>
 
-<a href="admin.html" class="active">
-    <span class="icon">📋</span>
-    <span class="texto">Administração</span>
-</a>
+<a href="admin.html" class="active">📋 Administração</a>
 
-<a href="excluidos.html">
-    <span class="icon">🗑</span>
-    <span class="texto">Excluídos</span>
-</a>
+<a href="excluidos.html">🗑 Excluídos</a>
 
 <h4>ABASTECIMENTO</h4>
 
-<a href="abastecimento.html">
-    <span class="icon">⛽</span>
-    <span class="texto">Planilha</span>
-</a>
+<a href="abastecimento.html">⛽ Planilha</a>
 
-<a href="dashboard-abastecimento.html">
-    <span class="icon">📈</span>
-    <span class="texto">Dashboard</span>
-</a>
+<a href="dashboard-abastecimento.html">📈 Dashboard</a>
 
 </aside>
 
@@ -400,7 +312,6 @@ footer{text-align:center;padding:14px;color:var(--muted);font-size:.85rem;
 <header>
 
 <div style="display:flex;align-items:center;gap:15px;">
-<button id="menuBtn">☰</button>
 
 <h1>Administração</h1>
 
@@ -796,28 +707,6 @@ function escapeHtml(s){
 
 /* inicializa */
 carregarLista();
-
-const menuBtn = document.getElementById("menuBtn");
-
-const sidebar = document.querySelector(".sidebar");
-
-const conteudo = document.querySelector(".conteudo");
-
-menuBtn.onclick = ()=>{
-
-    sidebar.classList.toggle("fechada");
-
-    if(sidebar.classList.contains("fechada")){
-
-        conteudo.style.marginLeft="75px";
-
-    }else{
-
-        conteudo.style.marginLeft="250px";
-
-    }
-
-};
   
 </script>
 </div>
