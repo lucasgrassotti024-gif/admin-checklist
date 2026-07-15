@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Planilha — Abastecimento</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+tr.selected-row {
+  background: rgba(37,99,235,0.25) !important;
+}
+  
+:root {
+  --primary:#2563eb;
+  --accent:#1d4ed8;
+  --bg:#f3f6fb;
+  --card:#ffffff;
+  --text:#111827;
+  --muted:#6b7280;
+  --border:#e5e7eb;
+  --shadow-soft:0 10px 30px rgba(15,23,42,0.10);
+  --shadow-hard:0 18px 45px rgba(15,23,42,0.20);
+
+  --sidebar-bg:#ffffff;
+  --sidebar-text:#111827;
+  --sidebar-link:#111827;
+
+  /* NOVOS: para tabela */
+  --table-header-bg:rgba(37,99,235,0.06);
+  --table-header-border:#cbd5f5;
+  --table-row-alt:rgba(15,23,42,0.015);
+}
+.dark {
+  --bg:#020617;
+  --card:#020617;
+  --text:#e5e7eb;
+  --muted:#9ca3af;
+  --border:#111827;
+  --shadow-soft:0 10px 30px rgba(0,0,0,0.60);
+  --shadow-hard:0 18px 45px rgba(0,0,0,0.80);
+
+  --sidebar-bg:#020617;
+  --sidebar-text:#e5e7eb;
+  --sidebar-link:#e5e7eb;
+
+  --table-header-bg:rgba(15,23,42,0.92);
+  --table-header-border:#1e293b;
+  --table-row-alt:rgba(15,23,42,0.45);
+}
+
+*{
+  box-sizing:border-box;
+  font-family:"Inter",sans-serif;
+  transition:background-color .25s ease,color .25s ease,border-color .25s ease;
+}
+
+/* FUNDO */
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+}
+
+/* SIDEBAR (igual dashboard) */
+.sidebar{
+  width:230px;
+  background:var(--sidebar-bg);
+  color:var(--sidebar-text);
+  display:flex;
+  flex-direction:column;
+  padding:14px 12px;
+  gap:14px;
+  position:fixed;
+  inset-block:0;
+  left:0;
+  z-index:40;
+  box-shadow:var(--shadow-hard);
+  transform:translateX(-100%);
+  transition:transform .25s ease, background-color .25s ease, color .25s ease;
+}
+body.sidebar-open .sidebar{
+  transform:translateX(0);
+}
+.sidebar-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+.sidebar-title-block{
+  display:flex;
+  flex-direction:column;
+}
+.sidebar-title{
+  font-family:"Outfit";
+  font-weight:800;
+  font-size:1.0rem;
+}
+.sidebar-sub{
+  font-size:.72rem;
+  color:var(--muted);
+}
+.sidebar-toggle-theme{
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  border:1px solid rgba(148,163,184,0.5);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  background:transparent;
+  font-size:1rem;
+  color:var(--sidebar-text);
+}
+.sidebar-nav{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.sidebar-link{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 9px;
+  border-radius:10px;
+  text-decoration:none;
+  font-size:.85rem;
+  color:var(--sidebar-link);
+  cursor:pointer;
+}
+.sidebar-link span.icon{width:18px;text-align:center;}
+.sidebar-link:hover,
+.sidebar-link.active{
+  background:rgba(37,99,235,0.15);
+}
+.sidebar-footer{
+  margin-top:auto;
+  font-size:.7rem;
+  color:var(--muted);
+  border-top:1px solid rgba(148,163,184,0.3);
+  padding-top:8px;
+}
+
+/* BOTÃO FLOANTE SIDEBAR */
+.sidebar-handle{
+  position:fixed;
+  top:14px;
+  left:10px;
+  z-index:45;
+  width:30px;
+  height:30px;
+  border-radius:999px;
+  border:none;
+  cursor:pointer;
+  background:#2563eb;
+  color:#f9fafb;
+  box-shadow:0 8px 20px rgba(37,99,235,0.6);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.1rem;
+}
+
+/* MAIN WRAPPER */
+.main-wrapper{
+  flex:1;
+  min-height:100vh;
+  padding:18px 20px 24px;
+  display:flex;
+  flex-direction:column;
+}
+@media(max-width:900px){
+  .main-wrapper{
+    padding-top:56px;
+  }
+}
+
+/* TOPBAR MOBILE */
+.topbar-mobile{
+  position:fixed;
+  top:0;left:0;right:0;
+  height:48px;
+  background:var(--sidebar-bg);
+  color:var(--sidebar-text);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:"Outfit";
+  font-weight:700;
+  font-size:.9rem;
+  z-index:30;
+}
+@media(min-width:901px){
+  .topbar-mobile{display:none;}
+}
+
+/* HEADER */
+.page-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:12px;
+  margin-bottom:10px;
+}
+.page-title{
+  font-family:"Outfit";
+  font-weight:800;
+  font-size:1.4rem;
+}
+.page-sub{
+  font-size:.8rem;
+  color:var(--muted);
+}
+
+/* AÇÕES ACIMA DA TABELA */
+.table-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:6px;
+  margin-bottom:4px;
+  align-items:center;
+}
+.table-actions button{
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:var(--card);
+  font-size:.78rem;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+.table-actions button.primary{
+  background:linear-gradient(135deg,#2563eb,#1d4ed8);
+  color:#f9fafb;
+  border:none;
+  box-shadow:var(--shadow-soft);
+}
+
+/* WRAPPER DA TABELA (drag-scroll) */
+.table-wrapper{
+  margin-top:12px;
+  background:var(--card);
+  border-radius:18px;
+  box-shadow:var(--shadow-soft);
+  border:1px solid var(--table-header-border); /* mais visível */
+  padding:12px;
+  overflow:auto;
+  cursor:grab;
+}
+.table-wrapper.dragging{
+  cursor:grabbing;
+}
+
+/* TABELA */
+table{
+  border-collapse:collapse;
+  min-width:900px;
+  background:var(--card);
+}
+thead{
+  position:sticky;
+  top:0;
+  z-index:5;
+  background:var(--table-header-bg);
+  box-shadow:0 2px 4px rgba(15,23,42,0.08);
+}
+th,td{
+  border:1px solid var(--border);
+  padding:6px 8px;
+  font-size:.8rem;
+  white-space:nowrap;
+}
+th{
+  background:var(--table-header-bg);
+  border-bottom:1px solid var(--table-header-border);
+  font-weight:700;
+  text-align:left;
+}
+th.filterable{
+  padding:0;
+}
+.th-inner-btn{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:6px;
+  padding:6px 8px;
+  width:100%;
+  background:transparent;
+  border:none;
+  font-size:.78rem;
+  font-weight:700;
+  cursor:pointer;
+  color:var(--text);
+}
+.th-inner-btn span.chevron{
+  font-size:.7rem;
+}
+
+/* LINHAS ZEBRADAS + HOVER */
+tbody tr:nth-child(even){
+  background:var(--table-row-alt);
+}
+tbody tr:hover{
+  background:rgba(37,99,235,0.06);
+}
+
+/* CÉLULAS EDITÁVEIS */
+td[contenteditable="true"]{
+  background:rgba(37,99,235,0.02);
+}
+td[contenteditable="true"]:focus{
+  outline:2px solid rgba(37,99,235,0.7);
+  background:rgba(37,99,235,0.08);
+}
+
+/* COLUNAS AVANÇADAS (escondidas por padrão) */
+.advanced-col{
+  display:none;
+}
+body.show-advanced .advanced-col{
+  display:table-cell;
+}
+
+/* PAINEL DE FILTRO POR COLUNA */
+#colFilterPanel{
+  position:fixed;
+  top:70px;
+  right:20px;
+  width:220px;
+  background:var(--card);
+  border-radius:12px;
+  border:1px solid var(--border);
+  box-shadow:var(--shadow-soft);
+  padding:8px;
+  display:none;
+  z-index:60;
+}
+#colFilterPanel.open{
+  display:block;
+}
+#colFilterTitle{
+  font-size:.8rem;
+  font-weight:600;
+  margin-bottom:4px;
+}
+#colFilterList{
+  max-height:210px;
+  overflow:auto;
+  margin-bottom:6px;
+}
+.col-option{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:.78rem;
+  padding:2px 0;
+}
+.col-option input{
+  width:14px;
+  height:14px;
+}
+#colFilterActions{
+  display:flex;
+  gap:6px;
+}
+#applyColFilter,#clearColFilter{
+  flex:1;
+  padding:5px 6px;
+  border-radius:8px;
+  border:none;
+  font-size:.75rem;
+  font-weight:600;
+  cursor:pointer;
+}
+#applyColFilter{
+  background:linear-gradient(135deg,#2563eb,#1d4ed8);
+  color:#f9fafb;
+}
+#clearColFilter{
+  background:rgba(15,23,42,0.04);
+  color:var(--text);
+}
+
+/* RODAPÉ */
+footer{
+  margin-top:10px;
+  font-size:.75rem;
+  color:var(--muted);
+  text-align:center;
+}
+
+/* ===== MODAL IMPORTAÇÃO ===== */
+.import-modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.65);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+.import-modal.open{display:flex;}
+
+.import-box{
+  width:90%;
+  max-width:900px;
+  background:var(--card);
+  border-radius:18px;
+  padding:18px;
+  box-shadow:var(--shadow-hard);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.import-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.import-box textarea{
+  width:100%;
+  height:200px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background:var(--bg);
+  color:var(--text);
+  padding:10px;
+  font-size:.8rem;
+  resize:vertical;
+}
+
+.import-result{
+  font-size:.8rem;
+}
+
+.import-actions{
+  display:flex;
+  gap:8px;
+}
+
+ 
+  
+</style>
+</head>
+<body>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-title-block">
+      <span class="sidebar-title">Relatórios de Campo</span>
+      <span class="sidebar-sub">CMPC • RSS3</span>
+    </div>
+    <button id="themeToggle" class="sidebar-toggle-theme" type="button">🌙</button>
+  </div>
+
+  <nav class="sidebar-nav">
+    <a href="admin.html" class="sidebar-link">
+      <span class="icon">📋</span><span>Admin</span>
+    </a>
+    <a href="dashboard.html" class="sidebar-link">
+      <span class="icon">📊</span><span>Dashboard</span>
+    </a>
+    <a href="planilha.html" class="sidebar-link active">
+      <span class="icon">📑</span><span>Planilha</span>
+    </a>
+    <a href="oleo-ibcs.html" class="sidebar-link">
+      <span class="icon">🛢️</span><span>Óleo em IBCs</span>
+    </a>
+    <a href="abastecimento.html" class="sidebar-link">
+      <span class="icon">⛽</span><span>Abastecimento</span>
+    </a>
+    <a href="excluidos.html" class="sidebar-link">
+      <span class="icon">🗑️</span><span>Excluídos</span>
+    </a>
+    <a href="notificacoes.html" class="sidebar-link" id="linkNotificacoes">
+  <span class="icon">🔔</span><span>Notificações</span>
+</a>
+  </nav>
+
+  <div class="sidebar-footer">
+    Planilha dinâmica com filtros<br>e edição rápida.
+  </div>
+</aside>
+
+<button id="sidebarHandle" class="sidebar-handle" type="button">☰</button>
+
+<div class="topbar-mobile">Planilha — Relatórios</div>
+
+<div id="colFilterPanel">
+  <div id="colFilterTitle">Filtrar</div>
+  <div id="colFilterList"></div>
+  <div id="colFilterActions">
+    <button type="button" id="clearColFilter">Limpar</button>
+    <button type="button" id="applyColFilter">Aplicar</button>
+  </div>
+</div>
+
+<div class="main-wrapper">
+  <header class="page-header">
+    <div>
+      <div class="page-title">Planilha de Relatórios</div>
+      <div class="page-sub" id="subtitleInfo">Carregando dados...</div>
+    </div>
+  </header>
+
+  <div class="table-actions">
+
+    <button type="button" id="btnExcluirSelecionadas"
+  style="
+    background:#b91c1c;
+    color:white;
+    border:none;
+    border-radius:999px;
+    padding:6px 12px;
+    font-size:.78rem;
+    cursor:pointer;
+  ">
+  🗑️ Excluir selecionadas
+</button>
+
+<button type="button" id="btnExcluirTodos"
+  style="
+    background:#dc2626;
+    color:white;
+    border:none;
+    border-radius:999px;
+    padding:6px 12px;
+    font-size:.78rem;
+    cursor:pointer;
+  ">
+  🗑️ Excluir TODOS
+</button>
+    
+    <button type="button" id="btnToggleAdvanced">
+      <span id="labelAdvanced">Mostrar colunas avançadas</span>
+    </button>
+    <button type="button" class="primary" id="btnExportCsv">
+      Exportar CSV
+    </button>
+<button type="button" class="primary" id="btnImportExcel">
+  📥 Importar Excel
+</button>
+
+     <!-- 🔎 BUSCA GLOBAL -->
+  <input type="text" id="globalSearch"
+    placeholder="🔎 Buscar em toda planilha..."
+    style="
+      padding:6px 12px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:var(--card);
+      font-size:.8rem;
+      min-width:220px;
+    ">
+    
+  </div>
+
+  <div class="table-wrapper" id="tableWrapper">
+    <table id="sheetTable">
+      <thead>
+        <tr id="sheetHeaderRow">
+          </tr>
+      </thead>
+      <tbody id="sheetBody">
+        </tbody>
+    </table>
+  </div>
+
+  <footer>
+    © 2025 | Relatórios de Campo — Planilha
+  </footer>
+</div>
+
+  
+  <!-- ================= IMPORTAÇÃO EXCEL ================= -->
+<div id="importModal" class="import-modal">
+  <div class="import-box">
+    <div class="import-header">
+      <h3>Importar dados do Excel</h3>
+      <button type="button" id="closeImportModal">✕</button>
+    </div>
+
+    <textarea id="importTextarea"
+      placeholder="Cole aqui as linhas copiadas do Excel (Ctrl+V)..."></textarea>
+
+    <div id="importResult" class="import-result"></div>
+
+    <div class="import-actions">
+      <button type="button" id="analisarImport" class="primary">
+        Analisar
+      </button>
+    </div>
+  </div>
+</div>
+
+  
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCAfBANhkMec6TCGCO9JwrvOB79RbyLw8I",
+  authDomain: "relatorio-rss3-15896.firebaseapp.com",
+  projectId: "relatorio-rss3-15896",
+  storageBucket: "relatorio-rss3-15896.firebasestorage.app",
+  messagingSenderId: "905086909082",
+  appId: "1:905086909082:web:7535afa8dddbd7b691fd23",
+  measurementId: "G-EPGW3FGXX5"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+</script>
+<script>
+// Proteção básica
+if(localStorage.getItem("auth_relatorios")!=="true"){
+  // window.location.href="index.html";
+}
+
+/* Tema */
+const themeToggle=document.getElementById("themeToggle");
+if(localStorage.getItem("tema")==="dark"){
+  document.body.classList.add("dark");
+  themeToggle.textContent="☀️";
+}
+themeToggle.onclick=()=>{
+  document.body.classList.toggle("dark");
+  const dark=document.body.classList.contains("dark");
+  themeToggle.textContent=dark?"☀️":"🌙";
+  localStorage.setItem("tema",dark?"dark":"light");
+};
+
+/* Sidebar */
+const sidebarHandle=document.getElementById("sidebarHandle");
+sidebarHandle.addEventListener("click",()=>{
+  document.body.classList.toggle("sidebar-open");
+});
+</script>
+
+<script>
+const tableWrapper=document.getElementById("tableWrapper");
+const sheetHeaderRow=document.getElementById("sheetHeaderRow");
+const sheetBody=document.getElementById("sheetBody");
+const subtitleInfo=document.getElementById("subtitleInfo");
+
+const btnToggleAdvanced=document.getElementById("btnToggleAdvanced");
+const labelAdvanced=document.getElementById("labelAdvanced");
+const btnExportCsv=document.getElementById("btnExportCsv");
+let advancedVisible=false;
+
+// drag-scroll horizontal
+let isDown=false,startX,scrollLeft;
+tableWrapper.addEventListener("mousedown",(e)=>{
+  if(e.target.closest('td[contenteditable="true"]')) return;
+  isDown=true;
+  tableWrapper.classList.add("dragging");
+  startX=e.pageX - tableWrapper.offsetLeft;
+  scrollLeft=tableWrapper.scrollLeft;
+});
+tableWrapper.addEventListener("mouseleave",()=>{isDown=false;tableWrapper.classList.remove("dragging");});
+tableWrapper.addEventListener("mouseup",()=>{isDown=false;tableWrapper.classList.remove("dragging");});
+tableWrapper.addEventListener("mousemove",(e)=>{
+  if(!isDown) return;
+  e.preventDefault();
+  const x=e.pageX - tableWrapper.offsetLeft;
+  const walk=x-startX;
+  tableWrapper.scrollLeft = scrollLeft - walk;
+});
+
+// touch
+tableWrapper.addEventListener("touchstart",(e)=>{
+  if(e.target.closest('td[contenteditable="true"]')) return;
+  isDown=true;
+  tableWrapper.classList.add("dragging");
+  startX=e.touches[0].pageX - tableWrapper.offsetLeft;
+  scrollLeft=tableWrapper.scrollLeft;
+},{passive:true});
+tableWrapper.addEventListener("touchend",()=>{isDown=false;tableWrapper.classList.remove("dragging");});
+tableWrapper.addEventListener("touchmove",(e)=>{
+  if(!isDown) return;
+  const x=e.touches[0].pageX - tableWrapper.offsetLeft;
+  const walk=x-startX;
+  tableWrapper.scrollLeft = scrollLeft - walk;
+},{passive:true});
+
+/* ===== Helpers de duração ===== */
+function formatMinutesAsHhMm(min){
+  const n=parseInt(min,10);
+  if(isNaN(n) || n < 0) return "";
+  const h=Math.floor(n/60);
+  const m=n%60;
+  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
+}
+function parseDurationInputToMinutes(str){
+  if(!str) return null;
+  str=str.trim();
+  if(str.includes(":")){
+    const parts=str.split(":");
+    if(parts.length<2) return null;
+    const h=parseInt(parts[0],10);
+    const m=parseInt(parts[1],10);
+    if(isNaN(h)||isNaN(m)||h<0||m<0||m>=60) return null;
+    return h*60+m;
+  }
+  const n=parseInt(str,10);
+  if(isNaN(n) || n<0) return null;
+  return n;
+}
+
+/* ===== Definição de colunas ===== */
+const columns=[
+
+  {key:"ordem", label:"Ordem", editable:true},
+  {key:"data", label:"Data", editable:true},
+  {key:"mes", label:"Mês", editable:true},
+  {key:"horaAbastecimento", label:"Hora", editable:true},
+  {key:"placa", label:"Placa", editable:true},
+  {key:"quantidadeAbastecida", label:"Quantidade (L)", editable:true},
+  {key:"kmHorimetro", label:"KM / Hodômetro", editable:true},
+  {key:"tipoDiesel", label:"Tipo de Diesel", editable:true},
+  {key:"motorista", label:"Motorista", editable:true},
+  {key:"solicitante", label:"Solicitante", editable:true},
+
+  {key:"acaoExcluir", label:"Excluir", editable:false}
+
+];
+
+let relatoriosRaw=[];
+let relatoriosFiltrados=[];
+let activeFilters={};
+
+let globalSearchTerm = "";
+
+const globalSearch = document.getElementById("globalSearch");
+if(globalSearch){
+  globalSearch.addEventListener("input", () => {
+    globalSearchTerm = globalSearch.value.toLowerCase();
+    aplicarFiltrosEAtualizar();
+  });
+}
+
+const colFilterPanel=document.getElementById("colFilterPanel");
+const colFilterTitle=document.getElementById("colFilterTitle");
+const colFilterList=document.getElementById("colFilterList");
+const applyColFilter=document.getElementById("applyColFilter");
+const clearColFilter=document.getElementById("clearColFilter");
+
+let currentFilterCol=null;
+
+function openFilterPanelFor(colKey){
+  currentFilterCol=colKey;
+  const colConf=columns.find(c=>c.key===colKey);
+  colFilterTitle.textContent=`Filtrar: ${colConf ? colConf.label : colKey}`;
+  const valuesSet=new Set();
+  relatoriosRaw.forEach(r=>{
+    const v = r[colKey] ?? "";
+    valuesSet.add(String(v || "").trim());
+  });
+  const allValues=Array.from(valuesSet).sort((a,b)=>a.localeCompare(b));
+  const selectedSet = activeFilters[colKey] || new Set();
+  colFilterList.innerHTML="";
+  if(allValues.length===0){
+    colFilterList.innerHTML='<div style="font-size:.78rem;color:var(--muted);">Sem valores.</div>';
+  }else{
+    allValues.forEach(val=>{
+      const label=document.createElement("label");
+      label.className="col-option";
+      const checked = selectedSet.size===0 || selectedSet.has(val);
+      label.innerHTML=`
+        <input type="checkbox" data-value="${val.replace(/"/g,'&quot;')}" ${checked?"checked":""}>
+        <span>${val || "(vazio)"}</span>
+      `;
+      colFilterList.appendChild(label);
+    });
+  }
+  colFilterPanel.classList.add("open");
+}
+
+applyColFilter.addEventListener("click",()=>{
+  if(!currentFilterCol){colFilterPanel.classList.remove("open");return;}
+  const checks=colFilterList.querySelectorAll('input[type="checkbox"]');
+  const set=new Set();
+  checks.forEach(ch=>{ if(ch.checked) set.add(ch.dataset.value); });
+  if(set.size===0 || set.size===checks.length){
+    delete activeFilters[currentFilterCol];
+  }else{
+    activeFilters[currentFilterCol]=set;
+  }
+  colFilterPanel.classList.remove("open");
+  aplicarFiltrosEAtualizar();
+});
+
+clearColFilter.addEventListener("click",()=>{
+  if(currentFilterCol) delete activeFilters[currentFilterCol];
+  colFilterPanel.classList.remove("open");
+  aplicarFiltrosEAtualizar();
+});
+
+window.addEventListener("click",(e)=>{
+  if(!colFilterPanel.contains(e.target)) colFilterPanel.classList.remove("open");
+});
+
+function renderHeader(){
+  sheetHeaderRow.innerHTML="";
+  columns.forEach(col=>{
+    const th=document.createElement("th");
+    th.className="filterable";
+    th.dataset.colkey=col.key;
+    if(col.advanced) th.classList.add("advanced-col");
+    th.innerHTML=`<button type="button" class="th-inner-btn"><span>${col.label}</span><span class="chevron">▾</span></button>`;
+    th.querySelector("button").addEventListener("click",(e)=>{
+      e.stopPropagation();
+      openFilterPanelFor(col.key);
+    });
+    sheetHeaderRow.appendChild(th);
+  });
+}
+
+  function renderBody(){
+  sheetBody.innerHTML="";
+
+  relatoriosFiltrados.forEach(r=>{
+    const tr=document.createElement("tr");
+    tr.dataset.id=r.id;
+
+    columns.forEach(col=>{
+      const td=document.createElement("td");
+      td.dataset.col=col.key;
+
+      // BOTÃO EXCLUIR
+      if(col.key==="acaoExcluir"){
+
+        td.innerHTML = `
+          <button style="
+            background:#dc2626;
+            color:white;
+            border:none;
+            border-radius:6px;
+            padding:4px 8px;
+            cursor:pointer;
+            font-size:.75rem;
+          ">
+            🗑️
+          </button>
+        `;
+
+        td.querySelector("button").addEventListener("click", async ()=>{
+          const confirmar = confirm("Deseja realmente excluir este relatório?");
+          if(!confirmar) return;
+
+          try{
+            await db.collection("abastecimentos").doc(r.id).delete();
+          }catch(err){
+            alert("Erro ao excluir.");
+            console.error(err);
+          }
+        });
+
+      } else {
+
+        if(col.advanced) td.classList.add("advanced-col");
+
+        let val = r[col.key];
+
+        
+        if(val==null) val="";
+        td.textContent=String(val);
+
+        if(col.editable) td.contentEditable="true";
+      }
+
+      tr.appendChild(td);
+    });
+
+    sheetBody.appendChild(tr);
+  });
+}
+
+function aplicarFiltrosEAtualizar(){
+  relatoriosFiltrados = relatoriosRaw.filter(r=>{
+
+    // Filtro por coluna
+    for(const [colKey,set] of Object.entries(activeFilters)){
+      if(set && set.size>0){
+        const v=String(r[colKey] ?? "").trim();
+        if(!set.has(v)) return false;
+      }
+    }
+
+    // 🔎 Filtro global por palavra
+    if(globalSearchTerm){
+      const match = Object.values(r).some(val =>
+        String(val ?? "").toLowerCase().includes(globalSearchTerm)
+      );
+      if(!match) return false;
+    }
+
+    return true;
+  });
+
+  subtitleInfo.textContent = `${relatoriosFiltrados.length} relatório(s) exibido(s)`;
+  renderBody();
+}
+
+
+sheetBody.addEventListener("blur",async (e)=>{
+  const td=e.target;
+  if(td.tagName!=="TD" || !td.dataset.col) return;
+  const colKey=td.dataset.col;
+  const colConf=columns.find(c=>c.key===colKey);
+  if(!colConf || !colConf.editable) return;
+  const tr=td.closest("tr");
+  const id=tr.dataset.id;
+  let newValue=td.textContent.trim();
+  if(colKey==="duracaoMinutos"){
+    const mins=parseDurationInputToMinutes(newValue);
+    if(mins==null){
+      const objOld = relatoriosRaw.find(r=>r.id===id);
+      if(objOld) td.textContent = formatMinutesAsHhMm(objOld.duracaoMinutos);
+      return;
+    }
+    newValue = mins;
+    td.textContent = formatMinutesAsHhMm(mins);
+  }
+  try{
+   await db.collection("abastecimentos").doc(id).update({
+  [colKey]: newValue
+});
+    const obj=relatoriosRaw.find(r=>r.id===id);
+    if(obj) obj[colKey]=newValue;
+    aplicarFiltrosEAtualizar();
+  }catch(err){
+    console.error("Erro ao atualizar campo:",err);
+    td.style.background="rgba(220,38,38,0.15)";
+  }
+},true);
+
+btnToggleAdvanced.addEventListener("click",()=>{
+  advancedVisible=!advancedVisible;
+  document.body.classList.toggle("show-advanced",advancedVisible);
+  labelAdvanced.textContent = advancedVisible ? "Ocultar colunas avançadas" : "Mostrar colunas avançadas";
+});
+
+btnExportCsv.addEventListener("click",()=>{
+  if(!relatoriosFiltrados.length){ alert("Nenhum relatório para exportar."); return; }
+  const sep=";";
+  const header=columns.map(c=>c.label).join(sep);
+  const lines=[header];
+  relatoriosFiltrados.forEach(r=>{
+    const row=columns.map(col=>{
+      let v=r[col.key];
+      if(col.key==="duracaoMinutos"){ const n=parseInt(v,10); v=isNaN(n)?"":formatMinutesAsHhMm(n); }
+      if(v==null) v="";
+      let s=String(v).replace(/"/g,'""');
+      return (s.includes(sep) || s.includes('"') || s.includes('\n')) ? `"${s}"` : s;
+    }).join(sep);
+    lines.push(row);
+  });
+  const csv=lines.join("\r\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  const now=new Date();
+  a.href=url;
+  a.download=`relatorios-planilha-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+function carregarRelatoriosRealtime(){
+  subtitleInfo.textContent="Carregando dados do Firebase...";
+  db.collection("abastecimentos").onSnapshot((snap) => {
+    relatoriosRaw=[];
+   snap.docs.forEach(doc=>{
+  const d = doc.data();
+
+  relatoriosRaw.push({
+  id: doc.id,
+
+  ordem: d.ordem || "",
+  data: d.data || "",
+  mes: d.mes || "",
+  horaAbastecimento: d.horaAbastecimento || "",
+  placa: d.placa || "",
+  quantidadeAbastecida: d.quantidadeAbastecida || "",
+  kmHorimetro: d.kmHorimetro || "",
+  tipoDiesel: d.tipoDiesel || "",
+  motorista: d.motorista || "",
+  solicitante: d.solicitante || ""
+
+});
+
+});
+
+relatoriosRaw.sort((a,b)=>{
+  if(!a.data) return 1;
+  if(!b.data) return -1;
+
+  const da = new Date(a.data.includes("/") 
+    ? a.data.split("/").reverse().join("-") 
+    : a.data);
+
+  const dbb = new Date(b.data.includes("/") 
+    ? b.data.split("/").reverse().join("-") 
+    : b.data);
+
+  return dbb - da;
+});
+
+if(sheetHeaderRow.innerHTML==="") renderHeader();
+aplicarFiltrosEAtualizar();
+});
+
+}
+
+  carregarRelatoriosRealtime();
+  
+/* ============================
+   IMPORTAÇÃO PROFISSIONAL
+============================ */
+
+const importModal = document.getElementById("importModal");
+const btnImportExcel = document.getElementById("btnImportExcel");
+const closeImportModal = document.getElementById("closeImportModal");
+const analisarImportBtn = document.getElementById("analisarImport");
+const importTextarea = document.getElementById("importTextarea");
+const importResult = document.getElementById("importResult");
+
+btnImportExcel.addEventListener("click", () => {
+  importModal.classList.add("open");
+});
+
+closeImportModal.addEventListener("click", () => {
+  importModal.classList.remove("open");
+  importTextarea.value = "";
+  importResult.innerHTML = "";
+});
+
+/* ===== Helpers ===== */
+
+function converterDataBR(data){
+  if(!data.includes("/")) return data;
+  const [d,m,y] = data.split("/");
+  return `${y}-${m.padStart(2,"0")}-${d.padStart(2,"0")}`;
+}
+
+function horaParaMin(h){
+  if(!h || !h.includes(":")) return 0;
+  const [hh,mm] = h.split(":");
+  return parseInt(hh)*60 + parseInt(mm);
+}
+
+function detectarTurno(inicio){
+  const min = horaParaMin(inicio);
+  if(min>=450 && min<880) return "T1";
+  if(min>=880 && min<1420) return "T2";
+  return "T3";
+}
+
+/* ===== ANALISAR ===== */
+
+analisarImportBtn.addEventListener("click", async () => {
+
+  const texto = importTextarea.value.trim();
+
+  if(!texto){
+    alert("Cole os dados primeiro.");
+    return;
+  }
+
+  const linhas = texto.split("\n").filter(l => l.trim() !== "");
+  const validos = [];
+
+ linhas.forEach(l => {
+
+ const col = l.split("\t");
+
+if(col.length >= 10){
+
+    validos.push({
+
+        ordem: col[0]?.trim() || "",
+
+        data: converterDataBR(col[1]?.trim() || ""),
+
+        mes: col[2]?.trim() || "",
+
+        horaAbastecimento: col[3]?.trim() || "",
+
+        placa: col[4]?.trim() || "",
+
+        quantidadeAbastecida: col[5]?.trim() || "",
+
+        kmHorimetro: col[6]?.trim() || "",
+
+        tipoDiesel: col[7]?.trim() || "",
+
+        motorista: col[8]?.trim() || "",
+
+        solicitante: col[9]?.trim() || ""
+
+    });
+
+}
+
+});
+
+  let html = `
+  📊 ${linhas.length} linhas encontradas<br>
+  ✔ ${validos.length} válidas
+  <br><br>
+  <button class="primary" id="confirmImport">
+  Confirmar Importação
+  </button>
+  `;
+
+importResult.innerHTML = html;
+
+window._importValidos = validos;
+
+const btnConfirm = document.getElementById("confirmImport");
+btnConfirm.onclick = confirmarImport;
+});
+
+/* ===== CONFIRMAR ===== */
+
+async function confirmarImport(){
+
+  const dados = window._importValidos;
+  if(!dados || !dados.length){
+    alert("Nada para importar.");
+    return;
+  }
+
+  const permitidos = dados;
+  
+  let batch = db.batch();
+  let count = 0;
+
+  for(let i=0;i<permitidos.length;i++){
+
+     const ref = db.collection("abastecimentos").doc();
+     batch.set(ref, permitidos[i]);
+     count++;
+
+      if(count >= 450){
+     await batch.commit();
+     batch = db.batch();
+     count = 0;
+    }
+  }
+
+  if(count>0){
+    await batch.commit();
+  }
+
+  let msg = `Importação concluída!\n\n`;
+  msg += `✔ ${permitidos.length} registro(s) importado(s)\n`;
+
+ 
+
+  alert(msg);
+
+  importModal.classList.remove("open");
+  importTextarea.value = "";
+  importResult.innerHTML = "";
+}
+
+  sheetBody.addEventListener("keydown", async (e) => {
+
+  if(e.ctrlKey && e.key.toLowerCase() === "d"){
+
+    e.preventDefault();
+
+    const td = e.target;
+    if(td.tagName !== "TD") return;
+
+    const tr = td.closest("tr");
+    const prevRow = tr.previousElementSibling;
+    if(!prevRow) return;
+
+    const colIndex = Array.from(tr.children).indexOf(td);
+    const prevTd = prevRow.children[colIndex];
+    if(!prevTd) return;
+
+    const valor = prevTd.textContent.trim();
+    td.textContent = valor;
+
+    const id = tr.dataset.id;
+    const colKey = td.dataset.col;
+
+    if(!colKey) return;
+
+    let newValue = valor;
+
+    try{
+   const updatePayload = { [colKey]: newValue };
+     if(id){
+  await db.collection("abastecimentos").doc(id).update(updatePayload);
+}
+
+    const obj=relatoriosRaw.find(r=>r.id===id);
+      if(obj) obj[colKey]=newValue;
+
+    }catch(err){
+      console.error("Erro Ctrl+D:",err);
+    }
+  }
+
+});
+
+  /* ==============================
+   EXCLUIR TODOS RELATÓRIOS
+============================== */
+
+/* ==============================
+   EXCLUIR TODOS RELATÓRIOS
+============================== */
+
+const btnExcluirTodos = document.getElementById("btnExcluirTodos");
+
+btnExcluirTodos.addEventListener("click", async () => {
+
+  const confirmacao = confirm(
+    "⚠️ ATENÇÃO!\n\nIsso vai excluir TODOS os relatórios do sistema.\n\nDeseja continuar?"
+  );
+
+  if(!confirmacao) return;
+
+  const confirmacaoFinal = prompt(
+    "Digite EXCLUIR para confirmar definitivamente:"
+  );
+
+  if(confirmacaoFinal !== "EXCLUIR"){
+    alert("Operação cancelada.");
+    return;
+  }
+
+  try {
+
+    const snapshot = await db.collection("abastecimentos").get();
+
+    if(snapshot.empty){
+      alert("Não existem relatórios para excluir.");
+      return;
+    }
+
+    let batch = db.batch();
+    let count = 0;
+
+    for(const doc of snapshot.docs){
+
+      batch.delete(doc.ref);
+      count++;
+
+      if(count === 450){
+        await batch.commit();
+        batch = db.batch();
+        count = 0;
+      }
+
+    }
+
+    if(count > 0){
+      await batch.commit();
+    }
+
+    alert("Todos os relatórios foram excluídos com sucesso.");
+
+  } catch(err){
+    console.error(err);
+    alert("Erro ao excluir relatórios.");
+  }
+
+});
+/* ============================
+   SELEÇÃO MÚLTIPLA DE LINHAS
+============================ */
+
+let isSelecting = false;
+let startRowIndex = null;
+let selectedIds = new Set();
+
+const btnExcluirSelecionadas = document.getElementById("btnExcluirSelecionadas");
+
+function limparSelecaoVisual(){
+  document.querySelectorAll("#sheetBody tr").forEach(tr=>{
+    tr.classList.remove("selected-row");
+  });
+}
+
+function atualizarSelecaoVisual(){
+  limparSelecaoVisual();
+  document.querySelectorAll("#sheetBody tr").forEach(tr=>{
+    if(selectedIds.has(tr.dataset.id)){
+      tr.classList.add("selected-row");
+    }
+  });
+}
+
+sheetBody.addEventListener("mousedown", (e)=>{
+
+  if(e.target.tagName === "BUTTON") return;
+
+  const tr = e.target.closest("tr");
+  if(!tr) return;
+
+  isSelecting = true;
+  selectedIds.clear();
+
+  const rows = Array.from(sheetBody.querySelectorAll("tr"));
+  startRowIndex = rows.indexOf(tr);
+
+  selectedIds.add(tr.dataset.id);
+  atualizarSelecaoVisual();
+
+});
+
+sheetBody.addEventListener("mouseover", (e)=>{
+  if(!isSelecting) return;
+
+  const tr = e.target.closest("tr");
+  if(!tr) return;
+
+  const rows = Array.from(sheetBody.querySelectorAll("tr"));
+  const currentIndex = rows.indexOf(tr);
+
+  selectedIds.clear();
+
+  const [start,end] = [startRowIndex,currentIndex].sort((a,b)=>a-b);
+
+  for(let i=start;i<=end;i++){
+    selectedIds.add(rows[i].dataset.id);
+  }
+
+  atualizarSelecaoVisual();
+});
+
+document.addEventListener("mouseup", ()=>{
+  isSelecting = false;
+});
+
+
+/* ============================
+   EXCLUIR SELECIONADAS
+============================ */
+
+btnExcluirSelecionadas.addEventListener("click", async ()=>{
+
+  if(selectedIds.size === 0){
+    alert("Nenhuma linha selecionada.");
+    return;
+  }
+
+  const confirmar = confirm(
+    `Deseja excluir ${selectedIds.size} relatório(s)?`
+  );
+
+  if(!confirmar) return;
+
+  try {
+
+    let batch = db.batch();
+    let count = 0;
+
+   for(const id of selectedIds){
+
+  const ref = db.collection("abastecimentos").doc(id);
+  batch.delete(ref);
+  count++;
+
+  if(count >= 450){
+    await batch.commit();
+    batch = db.batch();
+    count = 0;
+  }
+
+}
+
+    if(count > 0){
+      await batch.commit();
+    }
+
+    selectedIds.clear();
+    atualizarSelecaoVisual();
+
+    alert("Registros excluídos com sucesso.");
+
+  } catch(err){
+    console.error(err);
+    alert("Erro ao excluir.");
+  }
+
+});
+  
+</script>
+</body>
+</html>
