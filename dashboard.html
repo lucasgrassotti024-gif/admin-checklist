@@ -32,6 +32,75 @@
 *{box-sizing:border-box;font-family:"Inter",sans-serif;transition:background-color .25s ease,color .25s ease,border-color .25s ease;}
 body{margin:0;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100vh;}
 
+/* ===== LAYOUT ===== */
+
+.layout{
+    display:flex;
+    min-height:100vh;
+}
+
+.sidebar{
+    position:fixed;
+    top:0;
+    left:0;
+    width:250px;
+    height:100vh;
+    background:#0b1120;
+    color:#fff;
+    padding:25px 20px;
+    display:flex;
+    flex-direction:column;
+    overflow-y:auto;
+    z-index:1000;
+}
+
+.sidebar h2{
+    margin:0 0 35px;
+    text-align:center;
+    font-size:28px;
+    color:white;
+}
+
+.sidebar h4{
+    margin:28px 0 12px;
+    color:#7b8794;
+    font-size:11px;
+    letter-spacing:2px;
+    font-weight:700;
+}
+
+.sidebar a{
+    color:#d1d5db;
+    text-decoration:none;
+    padding:12px 15px;
+    border-radius:10px;
+    margin-bottom:8px;
+    display:flex;
+    align-items:center;
+    transition:.2s;
+    font-weight:500;
+}
+
+.sidebar a:hover{
+    background:#1b2942;
+    transform:translateX(5px);
+}
+
+.sidebar a.active{
+    background:linear-gradient(90deg,#0078ff,#00b4ff);
+    color:#fff;
+    font-weight:700;
+    box-shadow:0 4px 12px rgba(0,120,255,.35);
+}
+
+.conteudo{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    min-width:0;
+    margin-left:250px;
+}
+  
 header{
   backdrop-filter:blur(14px);
   background:var(--white);
@@ -53,15 +122,6 @@ h1{font-family:"Outfit";font-weight:800;font-size:1.2rem;color:var(--primary);ma
 }
 .dark #themeToggle{background:var(--white);color:var(--primary);}
 #datetime{font-size:.85rem;color:var(--muted);margin-left:12px;}
-
-nav a{
-  text-decoration:none;font-weight:600;margin-left:18px;color:var(--primary);
-  position:relative;
-}
-nav a::after{
-  content:"";position:absolute;bottom:-3px;left:0;width:0;height:2px;background:var(--primary);transition:.25s;
-}
-nav a:hover::after{width:100%;}
 
 .wrap{
     max-width:1600px;
@@ -176,44 +236,53 @@ footer{
   .wrap{padding:20px 18px;}
   header{padding:12px 18px;}
 }
-@media (max-width: 600px){
-  header{
-    flex-direction:column;
-    align-items:flex-start;
-    gap:8px;
-  }
-  header > div{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    width:100%;
-    flex-wrap:wrap;
-    row-gap:6px;
-  }
-  #datetime{margin-left:0;font-size:.8rem;}
-  nav a{margin-left:12px;font-size:.95rem;}
-}
+  
 @media (max-width: 480px){
   header{padding:10px 12px;}
   h1{font-size:1.05rem;}
   #themeToggle{width:34px;height:34px;font-size:1rem;}
   .wrap{padding:18px 12px;}
 }
+
+
+  
 </style>
 </head>
 <body>
   
-<header>
-  <h1>Dashboard</h1>
-  <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-    <span id="datetime"></span>
-    <button id="themeToggle">🌙</button>
+<div class="layout">
 
-    <nav id="mainNav">
-      <a id="adminLink" href="admin.html">Administrador</a>
-      <a href="excluidos.html">Excluídos</a>
-    </nav>
-  </div>
+<aside class="sidebar">
+
+<h2>🚗 Sistema</h2>
+
+<h4>CHECKLISTS</h4>
+
+<a href="dashboard.html" class="active">📊 Dashboard</a>
+<a href="admin.html">📋 Administração</a>
+<a href="excluidos.html">🗑 Excluídos</a>
+
+<h4>ABASTECIMENTO</h4>
+
+<a href="abastecimento.html">⛽ Planilha</a>
+<a href="dashboard-abastecimento.html">📈 Dashboard</a>
+
+</aside>
+
+<div class="conteudo">
+
+<header>
+
+<h1>Dashboard</h1>
+
+<div style="display:flex;align-items:center;gap:14px;">
+
+<span id="datetime"></span>
+
+<button id="themeToggle">🌙</button>
+
+</div>
+
 </header>
 
 <div class="wrap">
@@ -304,13 +373,6 @@ toggle.onclick=()=>{
   toggle.textContent=dark?"☀️":"🌙";
   localStorage.setItem("tema",dark?"dark":"light");
 };
-
-/* EVITAR RELOGIN AO VOLTAR */
-document.getElementById('adminLink').addEventListener('click', function(e){
-  e.preventDefault();
-  localStorage.setItem('auth','true');
-  window.location.href = 'admin.html';
-});
 
 /* === BUSCAR CHECKLISTS DO FIRESTORE === */
 async function getChecklists(){
@@ -601,5 +663,9 @@ function criarGraficoSemanal(checklists){
   
   
 </script>
+</div>
+
+</div>
+
 </body>
 </html>
