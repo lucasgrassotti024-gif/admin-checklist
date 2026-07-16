@@ -719,9 +719,26 @@ function criarGraficoTemporal(dados){
 
     });
 
-    const labels = Object.keys(meses).sort();
+    const chaves = Object.keys(meses).sort();
 
-    const valores = labels.map(mes=>meses[mes]);
+const labels = chaves.map(chave=>{
+
+    const partes = chave.split("-");
+
+    const mes = Number(partes[1]);
+
+    const nomes = [
+        "Jan","Fev","Mar","Abr","Mai","Jun",
+        "Jul","Ago","Set","Out","Nov","Dez"
+    ];
+
+    return nomes[mes-1];
+
+});
+
+const anos = chaves.map(chave=>chave.split("-")[0]);
+
+const valores = chaves.map(chave=>meses[chave]);
 
     if(graficoTemporal){
 
@@ -729,6 +746,50 @@ function criarGraficoTemporal(dados){
 
     }
 
+const pluginAnos = {
+
+    id:"anos",
+
+    afterDraw(chart){
+
+        const {ctx, scales:{x}} = chart;
+
+        ctx.save();
+
+        ctx.fillStyle="#9ca3af";
+
+        ctx.font="bold 12px Inter";
+
+        let ultimoAno="";
+
+        chaves.forEach((chave,index)=>{
+
+            const ano = chave.split("-")[0];
+
+            if(ano!==ultimoAno){
+
+                ultimoAno=ano;
+
+                ctx.fillText(
+
+                    ano,
+
+                    x.getPixelForValue(index),
+
+                    x.bottom+35
+
+                );
+
+            }
+
+        });
+
+        ctx.restore();
+
+    }
+
+};
+    
     graficoTemporal = new Chart(
 
         document.getElementById("chartTemporal"),
@@ -736,6 +797,8 @@ function criarGraficoTemporal(dados){
         {
 
             type:"line",
+
+            plugins:[pluginAnos],
 
             data:{
 
@@ -755,22 +818,39 @@ function criarGraficoTemporal(dados){
 
             },
 
-            options:{
+           options:{
 
-                responsive:true,
+    responsive:true,
 
-                maintainAspectRatio:false,
+    maintainAspectRatio:false,
 
-                plugins:{
+    scales:{
 
-                    legend:{
-                        display:false
-                    }
+        x:{
 
-                }
-
+            grid:{
+                display:false
             }
 
+        },
+
+        y:{
+
+            beginAtZero:true
+
+        }
+
+    },
+
+    plugins:{
+
+        legend:{
+            display:false
+        }
+
+    }
+
+}
         }
 
     );
