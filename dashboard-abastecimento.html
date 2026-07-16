@@ -9,6 +9,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>    
+
 <style>
 
 :root{
@@ -461,6 +463,8 @@ firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
 
+Chart.register(ChartDataLabels);    
+
 </script>
 
 <script>
@@ -639,27 +643,53 @@ function criarGraficoVeiculos(dados){
 
             },
 
-            options:{
+           options:{
 
-                responsive:true,
+    interaction:{
 
-                maintainAspectRatio:false,
+        mode:"index",
+
+        intersect:false
+
+    },
+
+    responsive:true,
+
+    maintainAspectRatio:false,
 
                 plugins:{
 
-                    legend:{
+    legend:{
+        display:false
+    },
 
-                        display:false
+    datalabels:{
 
-                    }
+        color:"#fff",
 
-                }
+        anchor:"center",
 
-            }
+        align:"center",
 
-        }
+        font:{
 
-    );
+            weight:"bold",
+
+            size:11
+
+        },
+
+        formatter:(value)=>value.toLocaleString("pt-BR")+" L"
+
+     }
+
+    }
+                
+   }
+
+  }
+
+ );
 
 }
 
