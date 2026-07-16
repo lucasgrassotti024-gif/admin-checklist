@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard - Abastecimento</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+:root{
+    --primary:#0078ff;
+    --accent:#00b4ff;
+    --bg:#ffffff;
+    --white:#ffffff;
+    --card:#ffffff;
+    --text:#1a1a1a;
+    --muted:#666;
+    --border:#e3e6eb;
+    --shadow:0 8px 28px rgba(0,0,0,.08);
+}
+
+.dark{
+    --bg:#0b1120;
+    --white:#111827;
+    --card:#111827;
+    --text:#e9eef5;
+    --muted:#a7b0bc;
+    --border:#1f2937;
+    --shadow:0 4px 16px rgba(0,0,0,.6);
+}
+
+*{
+    box-sizing:border-box;
+    font-family:"Inter",sans-serif;
+    transition:background-color .25s,color .25s,border-color .25s;
+}
+
+body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+}
+
+/* =======================
+        LAYOUT
+======================= */
+
+.layout{
+    display:flex;
+    min-height:100vh;
+}
+
+.sidebar{
+    position:fixed;
+    left:0;
+    top:0;
+    width:250px;
+    height:100vh;
+    background:#0b1120;
+    color:#fff;
+    padding:25px 20px;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    z-index:1000;
+}
+
+.sidebar h2{
+    margin:0 0 35px;
+    text-align:center;
+    color:#fff;
+    font-size:28px;
+}
+
+.sidebar h4{
+    margin:28px 0 12px;
+    color:#7b8794;
+    font-size:11px;
+    letter-spacing:2px;
+}
+
+.sidebar a{
+    text-decoration:none;
+    color:#d1d5db;
+    padding:12px 15px;
+    border-radius:10px;
+    margin-bottom:8px;
+    transition:.2s;
+    font-weight:500;
+}
+
+.sidebar a:hover{
+    background:#1b2942;
+    transform:translateX(5px);
+}
+
+.sidebar a.active{
+    background:linear-gradient(90deg,#0078ff,#00b4ff);
+    color:#fff;
+    font-weight:700;
+    box-shadow:0 4px 12px rgba(0,120,255,.35);
+}
+
+.conteudo{
+    flex:1;
+    margin-left:250px;
+    display:flex;
+    flex-direction:column;
+}
+
+/* =======================
+        HEADER
+======================= */
+
+header{
+    position:sticky;
+    top:0;
+    z-index:100;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:14px 26px;
+    background:var(--white);
+    border-bottom:1px solid var(--border);
+    box-shadow:var(--shadow);
+    backdrop-filter:blur(14px);
+}
+
+.dark header{
+    background:var(--card);
+}
+
+h1{
+    margin:0;
+    color:var(--primary);
+    font-family:"Outfit";
+    font-size:1.2rem;
+}
+
+.dark h1{
+    color:#66b2ff;
+}
+
+#datetime{
+    color:var(--muted);
+    font-size:.85rem;
+}
+
+#themeToggle{
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    border:1px solid var(--border);
+    background:var(--card);
+    cursor:pointer;
+    font-size:18px;
+}
+
+.dark #themeToggle{
+    background:var(--white);
+}
+
+/* =======================
+        CONTEÚDO
+======================= */
+
+.wrap{
+    width:95%;
+    max-width:1600px;
+    margin:auto;
+    padding:24px;
+    flex:1;
+}
+
+.topo-dashboard{
+    display:flex;
+    gap:20px;
+    margin-bottom:24px;
+    align-items:stretch;
+}
+
+.total-card{
+    flex:1;
+    background:linear-gradient(135deg,var(--primary),var(--accent));
+    color:#fff;
+    border-radius:16px;
+    padding:24px;
+    text-align:center;
+    box-shadow:0 6px 20px rgba(0,120,255,.35);
+}
+
+.total-card span{
+    display:block;
+    font-size:42px;
+    font-weight:800;
+    margin-top:8px;
+}
+
+.filtro-card{
+    width:220px;
+    background:var(--white);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:20px;
+    box-shadow:var(--shadow);
+}
+
+.dark .filtro-card{
+    background:var(--card);
+}
+
+.filtro-card label{
+    display:block;
+    margin-bottom:10px;
+    font-weight:700;
+}
+
+.filtro-card select{
+    width:100%;
+    padding:10px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:var(--bg);
+    color:var(--text);
+}
+
+.filtro-ativo{
+    display:none;
+    margin-bottom:24px;
+    padding:15px 20px;
+    border-radius:12px;
+    background:#eef6ff;
+    border:1px solid #b9d7ff;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+}
+
+.card{
+    min-height:520px;
+    padding:20px;
+    background:var(--white);
+    border:1px solid var(--border);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+}
+
+.dark .card{
+    background:var(--card);
+}
+
+.card canvas{
+    width:100%!important;
+    height:430px!important;
+}
+
+footer{
+    text-align:center;
+    padding:14px;
+    color:var(--muted);
+    background:var(--white);
+    border-top:1px solid var(--border);
+}
+
+.dark footer{
+    background:var(--card);
+}
+
+@media(max-width:900px){
+
+    .topo-dashboard{
+        flex-direction:column;
+    }
+
+    .filtro-card{
+        width:100%;
+    }
+
+    .grid{
+        grid-template-columns:1fr;
+    }
+
+}
+
+@media(max-width:700px){
+
+    .sidebar{
+        width:220px;
+    }
+
+    .conteudo{
+        margin-left:220px;
+    }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="layout">
+
+<aside class="sidebar">
+
+<h2>🚗 Sistema</h2>
+
+<h4>CHECKLISTS</h4>
+
+<a href="dashboard.html">📊 Dashboard</a>
+<a href="admin.html">📋 Administração</a>
+<a href="excluidos.html">🗑 Excluídos</a>
+
+<h4>ABASTECIMENTO</h4>
+
+<a href="abastecimento.html">⛽ Planilha</a>
+<a href="dashboard-abastecimento.html" class="active">📈 Dashboard</a>
+
+</aside>
+
+<div class="conteudo">
+
+
+
+  <header>
+
+<h1>Dashboard de Abastecimento</h1>
+
+<div style="display:flex;align-items:center;gap:14px;">
+
+<span id="datetime"></span>
+
+<button id="themeToggle">🌙</button>
+
+</div>
+
+</header>
+
+<div class="wrap">
+
+<div class="topo-dashboard">
+
+    <div class="total-card">
+
+        Total de Litros Abastecidos
+
+        <span id="totalLitros">0 L</span>
+
+    </div>
+
+    <div class="filtro-card">
+
+        <label>Ano</label>
+
+        <select id="filtroAno">
+
+            <option value="">Todos</option>
+
+        </select>
+
+    </div>
+
+    <div class="filtro-card">
+
+        <label>Mês</label>
+
+        <select id="filtroMes">
+
+            <option value="">Todos</option>
+
+            <option value="0">Janeiro</option>
+            <option value="1">Fevereiro</option>
+            <option value="2">Março</option>
+            <option value="3">Abril</option>
+            <option value="4">Maio</option>
+            <option value="5">Junho</option>
+            <option value="6">Julho</option>
+            <option value="7">Agosto</option>
+            <option value="8">Setembro</option>
+            <option value="9">Outubro</option>
+            <option value="10">Novembro</option>
+            <option value="11">Dezembro</option>
+
+        </select>
+
+    </div>
+
+</div>
+
+<div id="filtroAtivo" class="filtro-ativo">
+
+<strong>Veículo selecionado:</strong>
+
+<span id="placaSelecionada">Nenhum</span>
+
+<button
+id="limparFiltro"
+style="float:right;padding:6px 12px;border:none;border-radius:8px;background:#dc3545;color:#fff;cursor:pointer;">
+
+Limpar filtro
+
+</button>
+
+</div>
+
+<div class="grid">
+
+    <div class="card">
+
+        <h3>🚛 Litros abastecidos por caminhão</h3>
+
+        <canvas id="chartVeiculos"></canvas>
+
+    </div>
+
+    <div class="card">
+
+        <h3>📈 Evolução mensal</h3>
+
+        <canvas id="chartTemporal"></canvas>
+
+    </div>
+
+</div>
+
+</div>
+
+<footer>
+
+© 2025 | Sistema de Abastecimento — Desenvolvido por <b>Lucas Grassotti Spolavori</b>
+
+</footer>
+
+<!-- FIREBASE -->
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+
+const firebaseConfig = {
+
+  apiKey: "AIzaSyCxI5gx0LS0ny2y6UnPUCyW0zf1BjnTSco",
+
+  authDomain: "checklist-rss3.firebaseapp.com",
+
+  projectId: "checklist-rss3",
+
+  storageBucket: "checklist-rss3.appspot.com",
+
+  messagingSenderId: "179261205524",
+
+  appId: "1:179261205524:web:376152c3b94fb115f14b01",
+
+  measurementId: "G-47CPMQ3ZTC"
+
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.firestore();
+
+</script>
+
+<script>
+
+setInterval(()=>{
+
+document.getElementById("datetime").textContent=
+
+new Date().toLocaleString("pt-BR",{
+
+timeZone:"America/Sao_Paulo"
+
+});
+
+},1000);
+
+const toggle=document.getElementById("themeToggle");
+
+if(localStorage.getItem("tema")==="dark"){
+
+document.body.classList.add("dark");
+
+toggle.textContent="☀️";
+
+}
+
+toggle.onclick=()=>{
+
+document.body.classList.toggle("dark");
+
+const dark=document.body.classList.contains("dark");
+
+toggle.textContent=dark?"☀️":"🌙";
+
+localStorage.setItem("tema",dark?"dark":"light");
+
+};
+
+
+
+  let abastecimentos = [];
+
+let anoSelecionado = "";
+let mesSelecionado = "";
+let placaSelecionada = "";
+
+async function carregarAbastecimentos(){
+
+    try{
+
+        const snap = await db.collection("abastecimentos").get();
+
+        abastecimentos = snap.docs.map(doc=>doc.data());
+
+        atualizarDashboard();
+
+    }catch(err){
+
+        console.error(err);
+
+    }
+
+}
+
+function atualizarDashboard(){
+
+    let dados = [...abastecimentos];
+
+    if(anoSelecionado){
+
+        dados = dados.filter(d=>String(d.ano)===String(anoSelecionado));
+
+    }
+
+    if(mesSelecionado!==""){
+
+        dados = dados.filter(d=>{
+
+            const data = new Date(d.data);
+
+            return data.getMonth()==mesSelecionado;
+
+        });
+
+    }
+
+    if(placaSelecionada){
+
+        dados = dados.filter(d=>d.placa===placaSelecionada);
+
+    }
+
+    atualizarCard(dados);
+
+    criarGraficoVeiculos(dados);
+
+    criarGraficoTemporal(dados);
+
+}
+
+function atualizarCard(dados){
+
+    let total = 0;
+
+    dados.forEach(item=>{
+
+        total += Number(item.litros || item.quantidade || 0);
+
+    });
+
+    document.getElementById("totalLitros").textContent =
+    total.toLocaleString("pt-BR")+" L";
+
+}
+
+function criarGraficoVeiculos(dados){
+
+    // vamos implementar depois
+
+}
+
+function criarGraficoTemporal(dados){
+
+    // vamos implementar depois
+
+}
+
+document.getElementById("filtroAno").addEventListener("change",e=>{
+
+    anoSelecionado = e.target.value;
+
+    atualizarDashboard();
+
+});
+
+document.getElementById("filtroMes").addEventListener("change",e=>{
+
+    mesSelecionado = e.target.value;
+
+    atualizarDashboard();
+
+});
+
+document.getElementById("limparFiltro").onclick=()=>{
+
+    placaSelecionada="";
+
+    document.getElementById("filtroAtivo").style.display="none";
+
+    atualizarDashboard();
+
+};
+
+carregarAbastecimentos();
+
+</script>
+
+</div>
+
+</div>
+
+</body>
+
+</html>
