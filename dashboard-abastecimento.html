@@ -448,21 +448,13 @@ Limpar filtro
 <script>
 
 const firebaseConfig = {
-
-  apiKey: "AIzaSyCxI5gx0LS0ny2y6UnPUCyW0zf1BjnTSco",
-
-  authDomain: "checklist-rss3.firebaseapp.com",
-
-  projectId: "checklist-rss3",
-
-  storageBucket: "checklist-rss3.appspot.com",
-
-  messagingSenderId: "179261205524",
-
-  appId: "1:179261205524:web:376152c3b94fb115f14b01",
-
-  measurementId: "G-47CPMQ3ZTC"
-
+  apiKey: "AIzaSyCAfBANhkMec6TCGCO9JwrvOB79RbyLw8I",
+  authDomain: "relatorio-rss3-15896.firebaseapp.com",
+  projectId: "relatorio-rss3-15896",
+  storageBucket: "relatorio-rss3-15896.firebasestorage.app",
+  messagingSenderId: "905086909082",
+  appId: "1:905086909082:web:7535afa8dddbd7b691fd23",
+  measurementId: "G-EPGW3FGXX5"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -523,6 +515,9 @@ async function carregarAbastecimentos(){
 
         abastecimentos = snap.docs.map(doc=>doc.data());
 
+        console.log("Quantidade de documentos:", snap.size);
+        console.log(abastecimentos);
+
         atualizarDashboard();
 
     }catch(err){
@@ -575,8 +570,7 @@ function atualizarCard(dados){
 
     dados.forEach(item=>{
 
-        total += Number(item.litros || item.quantidade || 0);
-
+       total += Number(item.quantidadeAbastecida || 0);
     });
 
     document.getElementById("totalLitros").textContent =
