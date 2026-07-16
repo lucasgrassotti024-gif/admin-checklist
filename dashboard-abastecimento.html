@@ -503,6 +503,10 @@ localStorage.setItem("tema",dark?"dark":"light");
 
   let abastecimentos = [];
 
+ let graficoVeiculos = null;
+
+ let graficoTemporal = null;   
+
 let anoSelecionado = "";
 let mesSelecionado = "";
 let placaSelecionada = "";
@@ -580,7 +584,82 @@ function atualizarCard(dados){
 
 function criarGraficoVeiculos(dados){
 
-    // vamos implementar depois
+    const litrosPorPlaca = {};
+
+    dados.forEach(item=>{
+
+        const placa = item.placa || "Sem placa";
+
+        const litros = Number(item.quantidadeAbastecida || 0);
+
+        if(!litrosPorPlaca[placa]){
+
+            litrosPorPlaca[placa]=0;
+
+        }
+
+        litrosPorPlaca[placa]+=litros;
+
+    });
+
+    const ranking = Object.entries(litrosPorPlaca)
+    .sort((a,b)=>b[1]-a[1]);
+
+    const placas = ranking.map(item=>item[0]);
+
+    const litros = ranking.map(item=>item[1]);
+
+    if(graficoVeiculos){
+
+        graficoVeiculos.destroy();
+
+    }
+
+    graficoVeiculos = new Chart(
+
+        document.getElementById("chartVeiculos"),
+
+        {
+
+            type:"bar",
+
+            data:{
+
+                labels:placas,
+
+                datasets:[{
+
+                    label:"Litros abastecidos",
+
+                    data:litros,
+
+                    borderWidth:1
+
+                }]
+
+            },
+
+            options:{
+
+                responsive:true,
+
+                maintainAspectRatio:false,
+
+                plugins:{
+
+                    legend:{
+
+                        display:false
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    );
 
 }
 
