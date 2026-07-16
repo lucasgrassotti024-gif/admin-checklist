@@ -697,9 +697,87 @@ function criarGraficoVeiculos(dados){
 
 function criarGraficoTemporal(dados){
 
-    // vamos implementar depois
+    const meses = {};
+
+    dados.forEach(item=>{
+
+        const data = new Date(item.data);
+
+        const chave =
+            data.getFullYear()+"-"+
+            String(data.getMonth()+1).padStart(2,"0");
+
+        const litros = Number(item.quantidadeAbastecida || 0);
+
+        if(!meses[chave]){
+
+            meses[chave]=0;
+
+        }
+
+        meses[chave]+=litros;
+
+    });
+
+    const labels = Object.keys(meses).sort();
+
+    const valores = labels.map(mes=>meses[mes]);
+
+    if(graficoTemporal){
+
+        graficoTemporal.destroy();
+
+    }
+
+    graficoTemporal = new Chart(
+
+        document.getElementById("chartTemporal"),
+
+        {
+
+            type:"line",
+
+            data:{
+
+                labels:labels,
+
+                datasets:[{
+
+                    label:"Litros abastecidos",
+
+                    data:valores,
+
+                    tension:.3,
+
+                    fill:false
+
+                }]
+
+            },
+
+            options:{
+
+                responsive:true,
+
+                maintainAspectRatio:false,
+
+                plugins:{
+
+                    legend:{
+                        display:false
+                    }
+
+                }
+
+            }
+
+        }
+
+    );
 
 }
+
+
 
 document.getElementById("filtroAno").addEventListener("change",e=>{
 
