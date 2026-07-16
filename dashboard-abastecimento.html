@@ -746,49 +746,7 @@ const valores = chaves.map(chave=>meses[chave]);
 
     }
 
-const pluginAnos = {
 
-    id:"anos",
-
-    afterDraw(chart){
-
-        const {ctx, scales:{x}} = chart;
-
-        ctx.save();
-
-        ctx.fillStyle="#9ca3af";
-
-        ctx.font="bold 12px Inter";
-
-        let ultimoAno="";
-
-        chaves.forEach((chave,index)=>{
-
-            const ano = chave.split("-")[0];
-
-            if(ano!==ultimoAno){
-
-                ultimoAno=ano;
-
-                ctx.fillText(
-
-                    ano,
-
-                    x.getPixelForValue(index),
-
-                    x.bottom+35
-
-                );
-
-            }
-
-        });
-
-        ctx.restore();
-
-    }
-
-};
     
     graficoTemporal = new Chart(
 
@@ -798,23 +756,61 @@ const pluginAnos = {
 
             type:"line",
 
-            plugins:[pluginAnos],
+            
 
             data:{
 
                 labels:labels,
 
-                datasets:[{
+               datasets:[{
 
-                    label:"Litros abastecidos",
+    label:"Litros abastecidos",
 
-                    data:valores,
+    data:valores,
 
-                    tension:.3,
+    borderColor:"#29b6ff",
 
-                    fill:false
+    backgroundColor:"#29b6ff",
 
-                }]
+    borderWidth:3,
+
+    pointRadius:5,
+
+    pointHoverRadius:7,
+
+    pointBackgroundColor:"#29b6ff",
+
+    tension:.35,
+
+    fill:false,
+
+    datalabels:{
+
+       align:function(context){
+
+    return context.dataIndex % 2 === 0 ? "top" : "bottom";
+
+},
+
+anchor:"end",
+
+offset:12,
+
+        color:"#dbeafe",
+
+        font:{
+
+            size:11,
+
+            weight:"bold"
+
+        },
+
+        formatter:(v)=>v.toLocaleString("pt-BR")
+
+    }
+
+}]
 
             },
 
@@ -826,7 +822,31 @@ const pluginAnos = {
 
     scales:{
 
-        x:{
+    x:{
+
+        offset:true,
+
+        ticks:{
+
+            padding:20,
+
+            color:"#dbeafe",
+
+            font:{
+
+                size:11
+
+            }
+
+        },
+
+        grid:{
+
+            display:false
+
+        }
+
+    },
 
             grid:{
                 display:false
