@@ -665,20 +665,17 @@ function criarGraficoVeiculos(dados){
 
    datalabels:{
 
-    color:"#ffffff",
-
-    anchor:"end",
+    color:"#dbeafe",
 
     align:"top",
+
+    anchor:"end",
 
     offset:4,
 
     font:{
-
-        weight:"bold",
-
-        size:11
-
+        size:11,
+        weight:"bold"
     },
 
     formatter:(value)=>value.toLocaleString("pt-BR")+" L"
@@ -820,15 +817,13 @@ offset:12,
 
     maintainAspectRatio:false,
 
-    scales:{
+   scales:{
 
     x:{
 
-        offset:true,
-
         ticks:{
 
-            padding:20,
+            padding:10,
 
             color:"#dbeafe",
 
@@ -848,19 +843,13 @@ offset:12,
 
     },
 
-            grid:{
-                display:false
-            }
+    y:{
 
-        },
+        beginAtZero:true
 
-        y:{
+    }
 
-            beginAtZero:true
-
-        }
-
-    },
+},
 
     plugins:{
 
