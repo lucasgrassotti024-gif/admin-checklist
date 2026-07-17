@@ -300,21 +300,16 @@ footer{
     .conteudo{
         margin-left:220px;
     }
-
 }
 
 </style>
-
 </head>
-
 <body>
-
 <div class="layout">
-
 <aside class="sidebar">
-
+    
 <h2>🚗 Sistema</h2>
-
+    
 <h4>CHECKLISTS</h4>
 
 <a href="dashboard.html">📊 Dashboard</a>
@@ -330,50 +325,32 @@ footer{
 
 <div class="conteudo">
 
-
-
   <header>
 
 <h1>Dashboard de Abastecimento</h1>
 
 <div style="display:flex;align-items:center;gap:14px;">
-
 <span id="datetime"></span>
-
 <button id="themeToggle">🌙</button>
-
 </div>
-
 </header>
-
 <div class="wrap">
-
 <div class="topo-dashboard">
-
-    <div class="total-card">
-
+ <div class="total-card">
+     
         Total de Litros Abastecidos
 
         <span id="totalLitros">0 L</span>
-
     </div>
-
     <div class="filtro-card">
-
         <label>Ano</label>
-
         <select id="filtroAno">
-
             <option value="">Todos</option>
-
         </select>
-
     </div>
-
     <div class="filtro-card">
-
+        
         <label>Mês</label>
-
         <select id="filtroMes">
 
             <option value="">Todos</option>
@@ -392,11 +369,8 @@ footer{
             <option value="11">Dezembro</option>
 
         </select>
-
     </div>
-
 </div>
-
 <div id="filtroAtivo" class="filtro-ativo">
 
 <strong>Veículo selecionado:</strong>
@@ -410,31 +384,22 @@ style="float:right;padding:6px 12px;border:none;border-radius:8px;background:#dc
 Limpar filtro
 
 </button>
-
 </div>
-
 <div class="grid">
-
     <div class="card">
 
         <h3>🚛 Litros abastecidos por caminhão</h3>
 
         <canvas id="chartVeiculos"></canvas>
-
     </div>
-
     <div class="card">
 
         <h3>📈 Evolução mensal</h3>
 
         <canvas id="chartTemporal"></canvas>
-
     </div>
-
 </div>
-
 </div>
-
 <footer>
 
 © 2025 | Sistema de Abastecimento — Desenvolvido por <b>Lucas Grassotti Spolavori</b>
@@ -444,9 +409,7 @@ Limpar filtro
 <!-- FIREBASE -->
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-
 <script>
 
 const firebaseConfig = {
@@ -460,543 +423,178 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const db = firebase.firestore();
-
 Chart.register(ChartDataLabels);    
-
 </script>
-
 <script>
-
+    
 setInterval(()=>{
-
 document.getElementById("datetime").textContent=
-
 new Date().toLocaleString("pt-BR",{
-
 timeZone:"America/Sao_Paulo"
-
 });
-
 },1000);
-
+    
 const toggle=document.getElementById("themeToggle");
-
 if(localStorage.getItem("tema")==="dark"){
-
 document.body.classList.add("dark");
-
 toggle.textContent="☀️";
-
 }
-
+    
 toggle.onclick=()=>{
-
 document.body.classList.toggle("dark");
-
 const dark=document.body.classList.contains("dark");
-
 toggle.textContent=dark?"☀️":"🌙";
-
 localStorage.setItem("tema",dark?"dark":"light");
 
 };
 
-
-
   let abastecimentos = [];
-
  let graficoVeiculos = null;
-
  let graficoTemporal = null;   
-
-let anoSelecionado = "";
-
-    
+let anoSelecionado = "";  
 let mesSelecionado = "";
 let placaSelecionada = "";
-
 async function carregarAbastecimentos(){
 
-    try{
-
-        const snap = await db.collection("abastecimentos").get();
+    try{ const snap = await db.collection("abastecimentos").get();
 
         abastecimentos = snap.docs.map(doc=>doc.data());
-
         console.log("Quantidade de documentos:", snap.size);
         console.log(abastecimentos);
+        preencherFiltroAno();
+        atualizarDashboard(); }catch(err){
+        console.error(err); }}
 
-        atualizarDashboard();
+    function preencherFiltroAno(){
+    const select = document.getElementById("filtroAno");
+    select.innerHTML = '<option value="">Todos</option>';
+    const anos = [...new Set(
+        abastecimentos
+            .filter(item => item.data)
+            .map(item => new Date(item.data).getFullYear())
+    )].sort();
 
-    }catch(err){
-
-        console.error(err);
-
-    }
-
-}
+    anos.forEach(ano => {
+        select.innerHTML += `<option value="${ano}">${ano}</option>`;
+    });}
 
 function atualizarDashboard(){
-
-    let dados = [...abastecimentos];
-
+let dados = [...abastecimentos];
     if(anoSelecionado){
-
     dados = dados.filter(d=>{
-
         if(!d.data) return false;
-
         const data = new Date(d.data);
-
-        return data.getFullYear()==anoSelecionado;
-
-    });
-
-}
-
+        return data.getFullYear()==anoSelecionado; });}
     if(mesSelecionado!==""){
-
         dados = dados.filter(d=>{
-
             const data = new Date(d.data);
-
-            return data.getMonth()==mesSelecionado;
-
-        });
-
-    }
-
+            return data.getMonth()==mesSelecionado;});}
     if(placaSelecionada){
-
-        dados = dados.filter(d=>d.placa===placaSelecionada);
-
-    }
-
+        dados = dados.filter(d=>d.placa===placaSelecionada); }
     atualizarCard(dados);
-
     criarGraficoVeiculos(dados);
-
-    criarGraficoTemporal(dados);
-
-}
+    criarGraficoTemporal(dados);}
 
 function atualizarCard(dados){
-
     let total = 0;
-
     dados.forEach(item=>{
-
-       total += Number(item.quantidadeAbastecida || 0);
-    });
-
+       total += Number(item.quantidadeAbastecida || 0);});
     document.getElementById("totalLitros").textContent =
-    total.toLocaleString("pt-BR")+" L";
-
-}
+    total.toLocaleString("pt-BR")+" L";}
 
 function criarGraficoVeiculos(dados){
-
     const litrosPorPlaca = {};
-
     dados.forEach(item=>{
-
         const placa = item.placa || "Sem placa";
-
         const litros = Number(item.quantidadeAbastecida || 0);
-
         if(!litrosPorPlaca[placa]){
-
-            litrosPorPlaca[placa]=0;
-
-        }
-
-        litrosPorPlaca[placa]+=litros;
-
-    });
-
+            litrosPorPlaca[placa]=0; }
+        litrosPorPlaca[placa]+=litros;});
     const ranking = Object.entries(litrosPorPlaca)
     .sort((a,b)=>b[1]-a[1]);
-
     const placas = ranking.map(item=>item[0]);
-
     const litros = ranking.map(item=>item[1]);
-
     if(graficoVeiculos){
-
-        graficoVeiculos.destroy();
-
-    }
-
+        graficoVeiculos.destroy(); }
     graficoVeiculos = new Chart(
-
-        document.getElementById("chartVeiculos"),
-
-        {
-
-            type:"bar",
-
-            data:{
-
-                labels:placas,
-
-                datasets:[{
-
-                    label:"Litros abastecidos",
-
-                    data:litros,
-
-                    borderWidth:1
-
-                }]
-
-            },
-
-           options:{
-
-    interaction:{
-
-        mode:"index",
-
-        intersect:false
-
-    },
-
-    responsive:true,
-
-    maintainAspectRatio:false,
-
-                plugins:{
-
-    legend:{
-        display:false
-    },
-
-                 
-
-   datalabels:{
-
-    color:"#dbeafe",
-
-    align:"top",
-
-    anchor:"end",
-
-    offset:4,
-
-    font:{
-        size:11,
-        weight:"bold"
-    },
-
-    formatter:(value)=>value.toLocaleString("pt-BR")+" L"
-
-}
-
-    }
-                
-   }
-
-  }
-
- );
-
-}
+        document.getElementById("chartVeiculos"), { type:"bar", data:{ labels:placas,  datasets:[{  label:"Litros abastecidos",   data:litros,
+    borderWidth:1   }]  }, options:{  interaction:{ mode:"index", intersect:false },  responsive:true,  maintainAspectRatio:false,    plugins:{
+  legend:{  display:false }, datalabels:{  color:"#dbeafe",  align:"top",  anchor:"end",  offset:4,  font:{ size:11,  weight:"bold" },
+    formatter:(value)=>value.toLocaleString("pt-BR")+" L"  }}}});}
 
 function criarGraficoTemporal(dados){
-
     const meses = {};
-
     dados.forEach(item=>{
-
         const data = new Date(item.data);
-
         const chave =
             data.getFullYear()+"-"+
             String(data.getMonth()+1).padStart(2,"0");
-
         const litros = Number(item.quantidadeAbastecida || 0);
-
-        if(!meses[chave]){
-
-            meses[chave]=0;
-
-        }
-
-        meses[chave]+=litros;
-
-    });
-
+        if(!meses[chave]){   meses[chave]=0; }  meses[chave]+=litros;  });
     const chaves = Object.keys(meses).sort();
-
 const labels = chaves.map(chave=>{
-
     const partes = chave.split("-");
-
     const mes = Number(partes[1]);
-
     const nomes = [
         "Jan","Fev","Mar","Abr","Mai","Jun",
-        "Jul","Ago","Set","Out","Nov","Dez"
-    ];
-
-    return nomes[mes-1];
-
-});
-
-const anos = chaves.map(chave=>chave.split("-")[0]);
-
+        "Jul","Ago","Set","Out","Nov","Dez" ];
+    return nomes[mes-1]; });
 const valores = chaves.map(chave=>meses[chave]);
-
-    if(graficoTemporal){
-
-        graficoTemporal.destroy();
-
-    }
-
-const pluginAnos = {
-
-    id:"anos",
-
-    afterDraw(chart){
-
-        const {ctx, chartArea, scales:{x}} = chart;
-
+    if(graficoTemporal){    graficoTemporal.destroy();   }
+const pluginAnos = {  id:"anos",  afterDraw(chart){
+       const {ctx, chartArea, scales:{x}} = chart;
         ctx.save();
-
         ctx.fillStyle="#9ca3af";
-
         ctx.font="bold 13px Inter";
-
         ctx.textAlign="center";
-
         const grupos={};
-
         chaves.forEach((chave,index)=>{
-
             const ano=chave.split("-")[0];
-
             if(!grupos[ano]){
-
-                grupos[ano]=[];
-
-            }
-
-            grupos[ano].push(index);
-
-        });
-
+                grupos[ano]=[];  }
+            grupos[ano].push(index);  });
         Object.entries(grupos).forEach(([ano,indices])=>{
-
             const inicio=x.getPixelForValue(indices[0]);
-
             const fim=x.getPixelForValue(indices[indices.length-1]);
-
             const centro=(inicio+fim)/2;
-
-            ctx.fillText(ano,centro,chartArea.bottom+40);
-
-        });
-
-        ctx.restore();
-
-    }
-
-};
-    
+           ctx.fillText(ano, centro, chartArea.bottom + 55);;  });
+        ctx.restore(); }};
     graficoTemporal = new Chart(
-
-        document.getElementById("chartTemporal"),
-
-        {
-
-            type:"line",
-
-            plugins:[pluginAnos],
-
-            data:{
-
-                labels:labels,
-
-               datasets:[{
-
-    label:"Litros abastecidos",
-
-    data:valores,
-
-    borderColor:"#29b6ff",
-
-    backgroundColor:"#29b6ff",
-
-    borderWidth:3,
-
-    pointRadius:5,
-
-    pointHoverRadius:7,
-
-    pointBackgroundColor:"#29b6ff",
-
-    tension:.35,
-
-    fill:false,
-
-    datalabels:{
-
-       align:function(context){
-
-    return context.dataIndex % 2 === 0 ? "top" : "bottom";
-
-},
-
-anchor:"end",
-
-offset:12,
-
-        color:"#dbeafe",
-
-        font:{
-
-            size:11,
-
-            weight:"bold"
-
-        },
-
-        formatter:(v)=>v.toLocaleString("pt-BR")
-        
- }
-}]
-
-            },
-
-           options:{
-
-    responsive:true,
-
-    maintainAspectRatio:false,
-
-layout:{
-
-    padding:{
-
-        bottom:35
-
- }
-},
-
-   scales:{
-
-    x:{
-
-        ticks:{
-
-            padding:22,
-
-            color:"#dbeafe",
-
-            font:{
-
-                size:11
-
-         }
-        },
-
-        grid:{
-
-            display:false
-
-     }
-    },
-
-    y:{
-
-        beginAtZero:true
-
- }
-},
-
-    plugins:{
-
-    legend:{
-        display:false
-    },
-
-    tooltip:{
-
-        callbacks:{
-
-            title(context){
-
+        document.getElementById("chartTemporal"), { type:"line", plugins:[pluginAnos], data:{ labels:labels, datasets:[{ label:"Litros abastecidos", data:valores, borderColor:"#29b6ff",
+  backgroundColor:"#29b6ff", borderWidth:3,  pointRadius:5,  pointHoverRadius:7,  pointBackgroundColor:"#29b6ff",  tension:.35,  fill:false,  datalabels:{   align:function(context){
+      
+    return context.dataIndex % 2 === 0 ? "top" : "bottom"; },
+  anchor:"end", offset:12,  color:"#dbeafe", font:{  size:11, weight:"bold" }, formatter:(v)=>v.toLocaleString("pt-BR")  }}] }, options:{ responsive:true, maintainAspectRatio:false,
+  layout:{ padding:{ bottom:35 }}, scales:{ x:{ ticks:{ padding:22, color:"#dbeafe", font:{ size:11 } },  grid:{ display:false } },  y:{  beginAtZero:true }}, plugins:{ legend:{  display:false },
+  tooltip:{ callbacks:{ title(context){
+      
                 const indice = context[0].dataIndex;
-
                 const partes = chaves[indice].split("-");
-
-                const meses = [
-                    "Janeiro","Fevereiro","Março","Abril",
-                    "Maio","Junho","Julho","Agosto",
-                    "Setembro","Outubro","Novembro","Dezembro"
-                ];
-
-                return meses[Number(partes[1])-1]+" de "+partes[0];
-
-            },
+                return meses[Number(partes[1])-1]+" de "+partes[0]; },
 
             label(context){
-
                 return "Litros: " +
-                    context.raw.toLocaleString("pt-BR")+" L";
-
-         }
-        }
-       },     
+                    context.raw.toLocaleString("pt-BR")+" L";  } } },     
             
-     datalabels:{
-          display:true
-         
-     }
-    }  
-   }
-  }
- );
-}
-
-
-
+     datalabels:{ display(context){  return context.active; }, } } } } );}
+    
 document.getElementById("filtroAno").addEventListener("change",e=>{
-
     anoSelecionado = e.target.value;
-
-    atualizarDashboard();
-
-});
-
+    atualizarDashboard(); });
+    
 document.getElementById("filtroMes").addEventListener("change",e=>{
-
     mesSelecionado = e.target.value;
-
-    atualizarDashboard();
-
-});
+    atualizarDashboard();});
 
 document.getElementById("limparFiltro").onclick=()=>{
-
     placaSelecionada="";
-
     document.getElementById("filtroAtivo").style.display="none";
+    atualizarDashboard(); };
 
-    atualizarDashboard();
-
-};
-
-carregarAbastecimentos();
 
 </script>
-
 </div>
-
 </div>
-
 </body>
-
 </html>
