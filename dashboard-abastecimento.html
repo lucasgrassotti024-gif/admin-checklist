@@ -512,6 +512,8 @@ localStorage.setItem("tema",dark?"dark":"light");
  let graficoTemporal = null;   
 
 let anoSelecionado = "";
+
+    
 let mesSelecionado = "";
 let placaSelecionada = "";
 
@@ -542,9 +544,17 @@ function atualizarDashboard(){
 
     if(anoSelecionado){
 
-        dados = dados.filter(d=>String(d.ano)===String(anoSelecionado));
+    dados = dados.filter(d=>{
 
-    }
+        if(!d.data) return false;
+
+        const data = new Date(d.data);
+
+        return data.getFullYear()==anoSelecionado;
+
+    });
+
+}
 
     if(mesSelecionado!==""){
 
@@ -662,6 +672,8 @@ function criarGraficoVeiculos(dados){
     legend:{
         display:false
     },
+
+                 
 
    datalabels:{
 
@@ -881,7 +893,7 @@ layout:{
 
         ticks:{
 
-            padding:10,
+            padding:22,
 
             color:"#dbeafe",
 
@@ -911,11 +923,46 @@ layout:{
 
     plugins:{
 
-        legend:{
-            display:false
+       plugins:{
+
+    legend:{
+        display:false
+    },
+
+    tooltip:{
+
+        callbacks:{
+
+            title(context){
+
+                const indice = context[0].dataIndex;
+
+                const partes = chaves[indice].split("-");
+
+                const meses = [
+                    "Janeiro","Fevereiro","Março","Abril",
+                    "Maio","Junho","Julho","Agosto",
+                    "Setembro","Outubro","Novembro","Dezembro"
+                ];
+
+                return meses[Number(partes[1])-1]+" de "+partes[0];
+
+            },
+
+            label(context){
+
+                return "Litros: " +
+                    context.raw.toLocaleString("pt-BR")+" L";
+
+            }
+
         }
 
     }
+
+}
+
+    
 
 }
         }
