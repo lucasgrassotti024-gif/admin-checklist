@@ -864,9 +864,8 @@ offset:12,
         },
 
         formatter:(v)=>v.toLocaleString("pt-BR")
-
-    }
-
+        
+ }
 }]
 
             },
@@ -883,8 +882,7 @@ layout:{
 
         bottom:35
 
-    }
-
+ }
 },
 
    scales:{
@@ -901,29 +899,24 @@ layout:{
 
                 size:11
 
-            }
-
+         }
         },
 
         grid:{
 
             display:false
 
-        }
-
+     }
     },
 
     y:{
 
         beginAtZero:true
 
-    }
-
+ }
 },
 
     plugins:{
-
-       plugins:{
 
     legend:{
         display:false
@@ -954,21 +947,18 @@ layout:{
                 return "Litros: " +
                     context.raw.toLocaleString("pt-BR")+" L";
 
-            }
-
+         }
         }
-
-    }
-
-}
-
-    
-
-}
-        }
-
-    );
-
+       },     
+            
+     datalabels:{
+          display:true
+         
+     }
+    }  
+   }
+  }
+ );
 }
 
 
