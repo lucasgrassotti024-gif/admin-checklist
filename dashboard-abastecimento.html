@@ -540,6 +540,13 @@ const labels = chaves.map(chave=>{
         "Jan","Fev","Mar","Abr","Mai","Jun",
         "Jul","Ago","Set","Out","Nov","Dez" ];
     return nomes[mes-1]; });
+
+    const NOMES_MESES = [
+    "Janeiro","Fevereiro","Março","Abril",
+    "Maio","Junho","Julho","Agosto",
+    "Setembro","Outubro","Novembro","Dezembro"
+];
+    
 const valores = chaves.map(chave=>meses[chave]);
     if(graficoTemporal){    graficoTemporal.destroy();   }
 const pluginAnos = {  id:"anos",  afterDraw(chart){
@@ -571,7 +578,7 @@ const pluginAnos = {  id:"anos",  afterDraw(chart){
       
                 const indice = context[0].dataIndex;
                 const partes = chaves[indice].split("-");
-                return meses[Number(partes[1])-1]+" de "+partes[0]; },
+                return NOMES_MESES[Number(partes[1])-1] + " de " + partes[0];
 
             label(context){
                 return "Litros: " +
@@ -591,7 +598,8 @@ document.getElementById("limparFiltro").onclick=()=>{
     placaSelecionada="";
     document.getElementById("filtroAtivo").style.display="none";
     atualizarDashboard(); };
-
+    
+carregarAbastecimentos();
 
 </script>
 </div>
