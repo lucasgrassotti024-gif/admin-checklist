@@ -574,15 +574,26 @@ const pluginAnos = {  id:"anos",  afterDraw(chart){
     return context.dataIndex % 2 === 0 ? "top" : "bottom"; },
   anchor:"end", offset:12,  color:"#dbeafe", font:{  size:11, weight:"bold" }, formatter:(v)=>v.toLocaleString("pt-BR")  }}] }, options:{ responsive:true, maintainAspectRatio:false,
   layout:{ padding:{ bottom:35 }}, scales:{ x:{ ticks:{ padding:22, color:"#dbeafe", font:{ size:11 } },  grid:{ display:false } },  y:{  beginAtZero:true }}, plugins:{ legend:{  display:false },
-  tooltip:{ callbacks:{ title(context){
-      
-                const indice = context[0].dataIndex;
-                const partes = chaves[indice].split("-");
-                return NOMES_MESES[Number(partes[1])-1] + " de " + partes[0];
+                                                                                                                                                                        
+  tooltip:{
+    callbacks:{
+        title(context){
 
-            label(context){
-                return "Litros: " +
-                    context.raw.toLocaleString("pt-BR")+" L";  } } },     
+            const indice = context[0].dataIndex;
+            const partes = chaves[indice].split("-");
+
+            return NOMES_MESES[Number(partes[1])-1] + " de " + partes[0];
+
+        },
+
+        label(context){
+
+            return "Litros: " +
+                context.raw.toLocaleString("pt-BR")+" L";
+
+        }
+    }
+},     
             
      datalabels:{ display(context){  return context.active; }, } } } } );}
     
