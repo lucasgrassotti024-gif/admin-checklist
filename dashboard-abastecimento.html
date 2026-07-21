@@ -523,91 +523,262 @@ function criarGraficoVeiculos(dados){
   legend:{  display:false }, datalabels:{  color:"#dbeafe",  align:"top",  anchor:"end",  offset:4,  font:{ size:11,  weight:"bold" },
     formatter:(value)=>value.toLocaleString("pt-BR")+" L"  }}}});}
 
-function criarGraficoTemporal(dados){
-    const meses = {};
+    function criarGraficoTemporal(dados){
+
+    const resumo = {};
+
     dados.forEach(item=>{
+
+        if(!item.data) return;
+
         const data = new Date(item.data);
-        const chave =
-            data.getFullYear()+"-"+
-            String(data.getMonth()+1).padStart(2,"0");
+
+        const ano = data.getFullYear();
+        const mes = data.getMonth()+1;
+
         const litros = Number(item.quantidadeAbastecida || 0);
-        if(!meses[chave]){   meses[chave]=0; }  meses[chave]+=litros;  });
-    const chaves = Object.keys(meses).sort();
-const NOMES_MESES = [
-    "Jan","Fev","Mar","Abr","Mai","Jun",
-    "Jul","Ago","Set","Out","Nov","Dez"
-];
 
-const labels = chaves.map(chave => {
+        let chave;
+        let label;
 
-    const partes = chave.split("-");
-    const ano = partes[0];
-    const mes = Number(partes[1]);
+        if(anoSelecionado===""){
 
-    let texto = "";
+            if(mes<=3){
+                chave = ano+"-1";
+                label = "Jan";
+            }
+            else if(mes<=6){
+                chave = ano+"-2";
+                label = "Abr";
+            }
+            else if(mes<=9){
+                chave = ano+"-3";
+                label = "Jul";
+            }
+            else{
+                chave = ano+"-4";
+                label = "Out";
+            }
 
-    if(mes === 1) texto = "Jan";
-    if(mes === 4) texto = "Abr";
-    if(mes === 7) texto = "Jul";
-    if(mes === 10) texto = "Out";
+        }else{
 
-    return [texto, ""];
-});
+            chave = ano+"-"+mes;
 
-   const NOMES_MESES_COMPLETO = [
-    "Janeiro","Fevereiro","Março","Abril",
-    "Maio","Junho","Julho","Agosto",
-    "Setembro","Outubro","Novembro","Dezembro"
-];
-    
-const valores = chaves.map(chave=>meses[chave]);
-    if(graficoTemporal){    graficoTemporal.destroy();   }
-const pluginAnos = {  id:"anos",  afterDraw(chart){
-       const {ctx, chartArea, scales:{x}} = chart;
-        ctx.save();
-        ctx.fillStyle="#9ca3af";
-        ctx.font="bold 13px Inter";
-        ctx.textAlign="center";
-        const grupos={};
-        chaves.forEach((chave,index)=>{
-            const ano=chave.split("-")[0];
-            if(!grupos[ano]){
-                grupos[ano]=[];  }
-            grupos[ano].push(index);  });
-        Object.entries(grupos).forEach(([ano,indices])=>{
-            const inicio=x.getPixelForValue(indices[0]);
-            const fim=x.getPixelForValue(indices[indices.length-1]);
-            const centro=(inicio+fim)/2;
-           ctx.fillText(ano, centro, chartArea.bottom + 22);;  });
-        ctx.restore(); }};
-    graficoTemporal = new Chart(
-        document.getElementById("chartTemporal"), { type:"line", plugins:[pluginAnos], data:{ labels:labels, datasets:[{ label:"Litros abastecidos", data:valores, borderColor:"#29b6ff",
-  backgroundColor:"#29b6ff", borderWidth:3,  pointRadius:5,  pointHoverRadius:7,  pointBackgroundColor:"#29b6ff",  tension:.35,  fill:false,  datalabels:{   align:function(context){
-      
-    return context.dataIndex % 2 === 0 ? "top" : "bottom"; },
-  anchor:"end", offset:12,  color:"#dbeafe", font:{  size:11, weight:"bold" }, formatter:(v)=>v.toLocaleString("pt-BR")  }}] }, options:{ responsive:true, maintainAspectRatio:false,
-  layout:{ padding:{ bottom:30 }}, scales:{ x:{ ticks:{ padding:12, color:"#dbeafe", font:{ size:11 } },  grid:{ display:false } },  y:{  beginAtZero:true }}, plugins:{ legend:{  display:false },
-                                                                                                                                                                        
-  tooltip:{
-    callbacks:{
-        title(context){
+            const nomes=[
+                "Jan","Fev","Mar","Abr","Mai","Jun",
+                "Jul","Ago","Set","Out","Nov","Dez"
+            ];
 
-            const indice = context[0].dataIndex;
-            const partes = chaves[indice].split("-");
-
-           return NOMES_MESES_COMPLETO[Number(partes[1])-1] + " de " + partes[0];
-        },
-
-        label(context){
-
-            return "Litros: " +
-                context.raw.toLocaleString("pt-BR")+" L";
+            label = nomes[mes-1];
 
         }
+
+        if(!resumo[chave]){
+
+            resumo[chave]={
+                ano,
+                label,
+                litros:0
+            };
+
+        }
+
+        resumo[chave].litros += litros;
+
+    });
+
+    const lista = Object.values(resumo).sort((a,b)=>{
+
+        if(a.ano!==b.ano) return a.ano-b.ano;
+
+        const ordem={
+            Jan:1,
+            Fev:2,
+            Mar:3,
+            Abr:4,
+            Mai:5,
+            Jun:6,
+            Jul:7,
+            Ago:8,
+            Set:9,
+            Out:10,
+            Nov:11,
+            Dez:12
+        };
+
+        return ordem[a.label]-ordem[b.label];
+
+    });
+
+    const labels = lista.map(item=>{
+
+        if(anoSelecionado===""){
+
+            return [item.label,item.ano];
+
+        }
+
+        return item.label;
+
+    });
+
+    const valores = lista.map(item=>item.litros);
+
+    if(graficoTemporal){
+
+        graficoTemporal.destroy();
+
     }
-},     
-            
-     datalabels:{ display(context){  return context.active; }, } } } } );}
+
+    const mesesCompletos=[
+        "Janeiro","Fevereiro","Março","Abril",
+        "Maio","Junho","Julho","Agosto",
+        "Setembro","Outubro","Novembro","Dezembro"
+    ];
+
+    graficoTemporal = new Chart(
+
+        document.getElementById("chartTemporal"),
+
+        {
+
+            type:"line",
+
+            data:{
+
+                labels,
+
+                datasets:[{
+
+                    data:valores,
+
+                    label:"Litros abastecidos",
+
+                    borderColor:"#29b6ff",
+
+                    backgroundColor:"#29b6ff",
+
+                    pointBackgroundColor:"#29b6ff",
+
+                    borderWidth:3,
+
+                    pointRadius:5,
+
+                    pointHoverRadius:7,
+
+                    tension:.35,
+
+                    fill:false,
+
+                    datalabels:{
+
+                        color:"#dbeafe",
+
+                        anchor:"end",
+
+                        align(context){
+
+                            return context.dataIndex%2===0 ? "top":"bottom";
+
+                        },
+
+                        offset:10,
+
+                        font:{
+                            size:11,
+                            weight:"bold"
+                        },
+
+                        formatter:v=>v.toLocaleString("pt-BR")
+
+                    }
+
+                }]
+
+            },
+
+            options:{
+
+                responsive:true,
+
+                maintainAspectRatio:false,
+
+                layout:{
+                    padding:{
+                        bottom:20
+                    }
+                },
+
+                scales:{
+
+                    x:{
+
+                        grid:{
+                            display:false
+                        },
+
+                        ticks:{
+                            padding:15
+                        }
+
+                    },
+
+                    y:{
+                        beginAtZero:true
+                    }
+
+                },
+
+                plugins:{
+
+                    legend:{
+                        display:false
+                    },
+
+                    tooltip:{
+
+                        callbacks:{
+
+                            title(context){
+
+                                const indice=context[0].dataIndex;
+
+                                const item=lista[indice];
+
+                                if(anoSelecionado===""){
+
+                                    return item.label+" / "+item.ano;
+
+                                }
+
+                                const numeroMes=[
+                                    "Jan","Fev","Mar","Abr","Mai","Jun",
+                                    "Jul","Ago","Set","Out","Nov","Dez"
+                                ].indexOf(item.label);
+
+                                return mesesCompletos[numeroMes]+" de "+item.ano;
+
+                            },
+
+                            label(context){
+
+                                return "Litros: "+context.raw.toLocaleString("pt-BR")+" L";
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    );
+
+}
     
 document.getElementById("filtroAno").addEventListener("change",e=>{
     anoSelecionado = e.target.value;
