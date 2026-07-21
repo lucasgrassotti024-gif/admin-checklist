@@ -630,6 +630,9 @@ function criarGraficoVeiculos(dados){
 
     }
 
+    const media =
+    valores.reduce((a,b)=>a+b,0) / valores.length;
+
     const mesesCompletos=[
         "Janeiro","Fevereiro","Março","Abril",
         "Maio","Junho","Julho","Agosto",
@@ -648,52 +651,29 @@ function criarGraficoVeiculos(dados){
 
                 labels,
 
-                datasets:[{
-
-                    data:valores,
-
-                    label:"Litros abastecidos",
-
-                    borderColor:"#29b6ff",
-
-                    backgroundColor:"#29b6ff",
-
-                    pointBackgroundColor:"#29b6ff",
-
-                    borderWidth:3,
-
-                    pointRadius:5,
-
-                    pointHoverRadius:7,
-
-                    tension:.35,
-
-                    fill:false,
-
-                    datalabels:{
-
-                        color:"#dbeafe",
-
-                        anchor:"end",
-
-                        align(context){
-
-                            return context.dataIndex%2===0 ? "top":"bottom";
-
-                        },
-
-                        offset:10,
-
-                        font:{
-                            size:11,
-                            weight:"bold"
-                        },
-
-                        formatter:v=>v.toLocaleString("pt-BR")
-
-                    }
-
-                }]
+                   datasets:[
+{
+    label:"Litros abastecidos",
+    data: valores,
+    borderColor:"#29b6ff",
+    backgroundColor:"#29b6ff",
+    borderWidth:3,
+    tension:.35,
+    fill:false
+},
+{
+    label:"Média",
+    data: Array(valores.length).fill(media),
+    borderColor:"#ff9800",
+    borderDash:[8,6],
+    borderWidth:2,
+    pointRadius:0,
+    fill:false,
+    datalabels:{
+        display:false
+    }
+}
+]   
 
             },
 
