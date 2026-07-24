@@ -484,6 +484,70 @@ async function carregarAbastecimentos(){
         console.log("Quantidade de documentos:", snap.size);
         console.log(abastecimentos);
         preencherFiltroAno();
+
+function preencherFiltroSemanas(){
+
+    const select = document.getElementById("filtroSemana");
+
+    const valorAtual = semanaSelecionada;
+
+    select.innerHTML = '<option value="">Selecione a semana</option>';
+
+    const semanas = [];
+
+    abastecimentos.forEach(item=>{
+
+        if(!item.data) return;
+
+        const data = new Date(item.data);
+
+        const inicioSemana = new Date(data);
+
+        inicioSemana.setDate(
+            data.getDate() - data.getDay() + 1
+        );
+
+        inicioSemana.setHours(0,0,0,0);
+
+        const chave =
+            inicioSemana.toISOString().split("T")[0];
+
+        if(!semanas.some(s=>s.valor===chave)){
+
+            const fimSemana = new Date(inicioSemana);
+            fimSemana.setDate(fimSemana.getDate()+6);
+
+            semanas.push({
+                valor: chave,
+                texto:
+                    inicioSemana.toLocaleDateString("pt-BR")+
+                    " até "+
+                    fimSemana.toLocaleDateString("pt-BR")
+            });
+
+        }
+
+    });
+
+    semanas.sort((a,b)=>b.valor.localeCompare(a.valor));
+
+    semanas.forEach(semana=>{
+
+        const option = document.createElement("option");
+
+        option.value = semana.valor;
+        option.textContent = semana.texto;
+
+        if(semana.valor===valorAtual){
+            option.selected = true;
+        }
+
+        select.appendChild(option);
+
+    });
+
+}
+        
         atualizarDashboard(); }catch(err){
         console.error(err); }}
 
