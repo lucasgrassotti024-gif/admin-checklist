@@ -398,6 +398,23 @@ Limpar filtro
 
         <canvas id="chartTemporal"></canvas>
     </div>
+
+<div class="card">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+
+        <h3>📅 Consumo semanal</h3>
+
+        <select id="filtroSemana" style="padding:8px 12px;border-radius:8px;">
+            <option value="">Selecione a semana</option>
+        </select>
+
+    </div>
+
+    <canvas id="chartSemanal"></canvas>
+
+</div>
+    
 </div>
 </div>
 <footer>
@@ -450,11 +467,15 @@ localStorage.setItem("tema",dark?"dark":"light");
 };
 
   let abastecimentos = [];
+    
  let graficoVeiculos = null;
- let graficoTemporal = null;   
+ let graficoTemporal = null;
+ let graficoSemanal = null;
+    
 let anoSelecionado = "";  
 let mesSelecionado = "";
 let placaSelecionada = "";
+let semanaSelecionada = "";    
 async function carregarAbastecimentos(){
 
     try{ const snap = await db.collection("abastecimentos").get();
@@ -480,28 +501,30 @@ async function carregarAbastecimentos(){
     });}
 
 function atualizarDashboard(){
-let dados = [...abastecimentos];
-    if(anoSelecionado){
-    dados = dados.filter(d=>{
-        if(!d.data) return false;
-        const data = new Date(d.data);
-        return data.getFullYear()==anoSelecionado; });}
-    if(mesSelecionado!==""){
-        dados = dados.filter(d=>{
-            const data = new Date(d.data);
-            return data.getMonth()==mesSelecionado;});}
-    if(placaSelecionada){
-        dados = dados.filter(d=>d.placa===placaSelecionada); }
+
+    let dados = [...abastecimentos];
+
+
     atualizarCard(dados);
     criarGraficoVeiculos(dados);
-    criarGraficoTemporal(dados);}
+    criarGraficoTemporal(dados);
+
+    preencherFiltroSemanas();
+    criarGraficoSemanal();
+
+}
 
 function atualizarCard(dados){
+
     let total = 0;
+
     dados.forEach(item=>{
-       total += Number(item.quantidadeAbastecida || 0);});
+        total += Number(item.quantidadeAbastecida || 0);
+    });
+
     document.getElementById("totalLitros").textContent =
-    total.toLocaleString("pt-BR")+" L";}
+        total.toLocaleString("pt-BR") + " L";
+}
 
 function criarGraficoVeiculos(dados){
     const litrosPorPlaca = {};
