@@ -519,6 +519,32 @@ function atualizarDashboard(){
 
     let dados = [...abastecimentos];
 
+    // FILTRO DE ANO
+    if(anoSelecionado !== ""){
+
+        dados = dados.filter(item => {
+            const data = obterDataAbastecimento(item.data);
+            if(!data) return false;
+            return data.getFullYear() === Number(anoSelecionado);
+        }); }
+
+
+    // FILTRO DE MÊS
+    if(mesSelecionado !== ""){
+
+        dados = dados.filter(item => {
+            const data = obterDataAbastecimento(item.data);
+            if(!data) return false;
+            return data.getMonth() === Number(mesSelecionado);
+        }); }
+
+
+    // FILTRO DE VEÍCULO
+    if(placaSelecionada !== ""){
+        dados = dados.filter(item =>
+            item.placa === placaSelecionada
+        ); }
+
 
     atualizarCard(dados);
     criarGraficoVeiculos(dados);
@@ -665,8 +691,9 @@ function criarGraficoVeiculos(dados){
 
     }
 
-    const media =
-    valores.reduce((a,b)=>a+b,0) / valores.length;
+    const media = valores.length
+    ? valores.reduce((a,b)=>a+b,0) / valores.length
+    : 0;
 
     const mesesCompletos=[
         "Janeiro","Fevereiro","Março","Abril",
