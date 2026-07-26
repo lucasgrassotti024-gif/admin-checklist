@@ -476,14 +476,29 @@ let anoSelecionado = "";
 let mesSelecionado = "";
 let placaSelecionada = "";
 let semanaSelecionada = "";    
-async function carregarAbastecimentos(){
 
-    try{ const snap = await db.collection("abastecimentos").get();
+    async function carregarAbastecimentos(){
 
-        abastecimentos = snap.docs.map(doc=>doc.data());
+    try{
+
+        const snap = await db.collection("abastecimentos").get();
+
+        abastecimentos = snap.docs.map(doc => doc.data());
+
         console.log("Quantidade de documentos:", snap.size);
         console.log(abastecimentos);
+
         preencherFiltroAno();
+        atualizarDashboard();
+
+    }catch(err){
+
+        console.error("Erro ao carregar abastecimentos:", err);
+
+    }
+
+}
+
 
 function preencherFiltroSemanas(){
 
@@ -495,50 +510,76 @@ function preencherFiltroSemanas(){
 
     const semanas = [];
 
-    abastecimentos.forEach(item=>{
+    abastecimentos.forEach(item => {
 
         if(!item.data) return;
 
         const data = new Date(item.data);
 
+        if(isNaN(data.getTime())) return;
+
+        const diaSemana = data.getDay();
+
+        const diasAteSegunda =
+            diaSemana === 0
+                ? -6
+                : 1 - diaSemana;
+
         const inicioSemana = new Date(data);
 
         inicioSemana.setDate(
-            data.getDate() - data.getDay() + 1
+            data.getDate() + diasAteSegunda
         );
 
         inicioSemana.setHours(0,0,0,0);
 
-        const chave =
-            inicioSemana.toISOString().split("T")[0];
+        const ano = inicioSemana.getFullYear();
 
-        if(!semanas.some(s=>s.valor===chave)){
+        const mes = String(
+            inicioSemana.getMonth() + 1
+        ).padStart(2,"0");
+
+        const dia = String(
+            inicioSemana.getDate()
+        ).padStart(2,"0");
+
+        const chave = `${ano}-${mes}-${dia}`;
+
+        if(!semanas.some(s => s.valor === chave)){
 
             const fimSemana = new Date(inicioSemana);
-            fimSemana.setDate(fimSemana.getDate()+6);
+
+            fimSemana.setDate(
+                fimSemana.getDate() + 6
+            );
 
             semanas.push({
+
                 valor: chave,
+
                 texto:
-                    inicioSemana.toLocaleDateString("pt-BR")+
-                    " até "+
+                    inicioSemana.toLocaleDateString("pt-BR") +
+                    " até " +
                     fimSemana.toLocaleDateString("pt-BR")
+
             });
 
         }
 
     });
 
-    semanas.sort((a,b)=>b.valor.localeCompare(a.valor));
+    semanas.sort(
+        (a,b) => b.valor.localeCompare(a.valor)
+    );
 
-    semanas.forEach(semana=>{
+    semanas.forEach(semana => {
 
         const option = document.createElement("option");
 
         option.value = semana.valor;
         option.textContent = semana.texto;
 
-        if(semana.valor===valorAtual){
+        if(semana.valor === valorAtual){
             option.selected = true;
         }
 
@@ -547,9 +588,6 @@ function preencherFiltroSemanas(){
     });
 
 }
-        
-        atualizarDashboard(); }catch(err){
-        console.error(err); }}
 
     function preencherFiltroAno(){
     const select = document.getElementById("filtroAno");
