@@ -761,10 +761,6 @@ function criarGraficoVeiculos(dados){
     pointHitRadius:18,
 
     datalabels:{
-        color:"#ffffff",
-
-        textStrokeColor:"#000000",
-        textStrokeWidth:3,
 
        color:"#ffffff",
        textStrokeColor:"#000000",
@@ -798,11 +794,17 @@ pointHitRadius:20,
 fill:false,
 datalabels:{
 
+   datalabels:{
+
     display:function(context){
 
         return context.dataIndex === valores.length - 1;
 
     },
+
+    color:"#ffffff",
+    textStrokeColor:"#000000",
+    textStrokeWidth:3,
 
     align:"top",
     anchor:"end",
