@@ -766,6 +766,10 @@ function criarGraficoVeiculos(dados){
         textStrokeColor:"#000000",
         textStrokeWidth:3,
 
+       color:"#ffffff",
+       textStrokeColor:"#000000",
+       textStrokeWidth:3,
+
         align:"top",
         anchor:"end",
         offset:6,
@@ -850,7 +854,14 @@ datalabels:{
                                 const item=lista[indice];
 
                                 if(anoSelecionado===""){
-                                    return item.label+" / "+item.ano; }
+
+                                const periodos = {
+                                 Jan:"Jan - Mar",
+                                 Abr:"Abr - Jun",
+                                 Jul:"Jul - Set",
+                                 Out:"Out - Dez" };
+                                    
+                                return periodos[item.label] + " / " + item.ano;}
 
                                 const numeroMes=[
                                     "Jan","Fev","Mar","Abr","Mai","Jun",
