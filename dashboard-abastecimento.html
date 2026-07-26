@@ -1276,15 +1276,84 @@ document.getElementById("totalSemana").textContent =
 
                     labels:labels,
 
-                    datasets:[{
-                        label:"Litros abastecidos",
-                        data:valores,
-                        borderWidth:1
-                    }]
+                   datasets:[
+    {
+        label:"Litros abastecidos",
+        data:valores,
+        borderColor:"#29b6ff",
+        backgroundColor:"#29b6ff",
+        borderWidth:3,
+        tension:.35,
+        fill:false,
 
-                },
+        pointRadius:5,
+        pointHoverRadius:8,
+        pointHitRadius:18,
 
-                options:{
+        datalabels:{
+            color:"#ffffff",
+            textStrokeColor:"#000000",
+            textStrokeWidth:3,
+
+            align:"top",
+            anchor:"end",
+            offset:6,
+
+            font:{
+                size:11,
+                weight:"bold"
+            },
+
+            formatter:function(value){
+                return value.toLocaleString("pt-BR") + " L";
+            }
+        }
+    },
+
+    {
+        label:"Média",
+        data:Array(valores.length).fill(media),
+        borderColor:"#ff9800",
+        borderDash:[8,6],
+        borderWidth:2,
+
+        pointRadius:0,
+        pointHoverRadius:5,
+        pointHitRadius:20,
+
+        fill:false,
+
+        datalabels:{
+            display:function(context){
+                return context.dataIndex === valores.length - 1;
+            },
+
+            color:"#ffffff",
+            textStrokeColor:"#000000",
+            textStrokeWidth:3,
+
+            align:"top",
+            anchor:"end",
+            offset:6,
+
+            font:{
+                size:11,
+                weight:"bold"
+            },
+
+            formatter:function(value){
+                return "Média: " +
+                    value.toLocaleString("pt-BR", {
+                        maximumFractionDigits:0
+                    }) +
+                    " L";
+            }
+        }
+    }
+]
+},
+
+options:{
 
                     responsive:true,
 
