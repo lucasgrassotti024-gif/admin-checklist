@@ -621,71 +621,71 @@ function criarGraficoVeiculos(dados){
 
     const resumo = {};
 
-    dados.forEach(item=>{
+    dados.forEach(item => {
 
         if(!item.data) return;
 
         const data = new Date(item.data);
 
         const ano = data.getFullYear();
-        const mes = data.getMonth()+1;
+        const mes = data.getMonth() + 1;
 
         const litros = Number(item.quantidadeAbastecida || 0);
 
         let chave;
         let label;
 
-        if(anoSelecionado===""){
+        if(anoSelecionado === ""){
 
-            if(mes<=3){
-                chave = ano+"-1";
+            if(mes <= 3){
+                chave = ano + "-1";
                 label = "Jan";
             }
-            else if(mes<=6){
-                chave = ano+"-2";
+            else if(mes <= 6){
+                chave = ano + "-2";
                 label = "Abr";
             }
-            else if(mes<=9){
-                chave = ano+"-3";
+            else if(mes <= 9){
+                chave = ano + "-3";
                 label = "Jul";
             }
             else{
-                chave = ano+"-4";
+                chave = ano + "-4";
                 label = "Out";
             }
 
         }else{
 
-            chave = ano+"-"+mes;
+            chave = ano + "-" + mes;
 
-            const nomes=[
+            const nomes = [
                 "Jan","Fev","Mar","Abr","Mai","Jun",
                 "Jul","Ago","Set","Out","Nov","Dez"
             ];
 
-            label = nomes[mes-1];
-
+            label = nomes[mes - 1];
         }
 
         if(!resumo[chave]){
 
-            resumo[chave]={
+            resumo[chave] = {
                 ano,
                 label,
                 litros:0
             };
-
         }
 
         resumo[chave].litros += litros;
-
     });
 
-    const lista = Object.values(resumo).sort((a,b)=>{
 
-        if(a.ano!==b.ano) return a.ano-b.ano;
+    const lista = Object.values(resumo).sort((a,b) => {
 
-        const ordem={
+        if(a.ano !== b.ano){
+            return a.ano - b.ano;
+        }
+
+        const ordem = {
             Jan:1,
             Fev:2,
             Mar:3,
@@ -700,189 +700,211 @@ function criarGraficoVeiculos(dados){
             Dez:12
         };
 
-        return ordem[a.label]-ordem[b.label];
-
+        return ordem[a.label] - ordem[b.label];
     });
 
-    const labels = lista.map(item=>{
 
-        if(anoSelecionado===""){
+    const labels = lista.map(item => {
 
-            return [item.label,item.ano];
-
+        if(anoSelecionado === ""){
+            return [item.label, item.ano];
         }
 
         return item.label;
-
     });
 
-    const valores = lista.map(item=>item.litros);
+
+    const valores = lista.map(item => item.litros);
+
 
     if(graficoTemporal){
-
         graficoTemporal.destroy();
-
     }
 
-    const media = valores.length
-    ? valores.reduce((a,b)=>a+b,0) / valores.length
-    : 0;
 
-    const mesesCompletos=[
+    const media = valores.length
+        ? valores.reduce((a,b) => a + b, 0) / valores.length
+        : 0;
+
+
+    const mesesCompletos = [
         "Janeiro","Fevereiro","Março","Abril",
         "Maio","Junho","Julho","Agosto",
         "Setembro","Outubro","Novembro","Dezembro"
     ];
 
+
     graficoTemporal = new Chart(
-
         document.getElementById("chartTemporal"),
-
         {
-
             type:"line",
 
             data:{
-
                 labels,
 
-                   datasets:[
-{
-    label:"Litros abastecidos",
-    data: valores,
-    borderColor:"#29b6ff",
-    backgroundColor:"#29b6ff",
-    borderWidth:3,
-    tension:.35,
-    fill:false,
+                datasets:[
+                    {
+                        label:"Litros abastecidos",
+                        data:valores,
 
-    pointRadius:5,
-    pointHoverRadius:8,
-    pointHitRadius:18,
+                        borderColor:"#29b6ff",
+                        backgroundColor:"#29b6ff",
 
-    datalabels:{
+                        borderWidth:3,
+                        tension:.35,
+                        fill:false,
 
-       color:"#ffffff",
-       textStrokeColor:"#000000",
-       textStrokeWidth:3,
+                        pointRadius:5,
+                        pointHoverRadius:8,
+                        pointHitRadius:18,
 
-        align:"top",
-        anchor:"end",
-        offset:6,
+                        datalabels:{
+                            color:"#ffffff",
+                            textStrokeColor:"#000000",
+                            textStrokeWidth:3,
 
-        font:{
-            size:11,
-            weight:"bold"
-        },
+                            align:"top",
+                            anchor:"end",
+                            offset:6,
 
-        formatter:function(value){
+                            font:{
+                                size:11,
+                                weight:"bold"
+                            },
 
-            return value.toLocaleString("pt-BR") + " L";
+                            formatter:function(value){
+                                return value.toLocaleString("pt-BR") + " L";
+                            }
+                        }
+                    },
 
-        }
-    }
-},
-{
-    label:"Média",
-    data: Array(valores.length).fill(media),
-    borderColor:"#ff9800",
-    borderDash:[8,6],
-    borderWidth:2,
-    pointRadius:0,
-pointHoverRadius:5,
-pointHitRadius:20,
-fill:false,
-datalabels:{
+                    {
+                        label:"Média",
 
-    display:function(context){
-        return context.dataIndex === valores.length - 1;
-    },
+                        data:Array(valores.length).fill(media),
 
-    color:"#ffffff",
-    textStrokeColor:"#000000",
-    textStrokeWidth:3,
+                        borderColor:"#ff9800",
+                        borderDash:[8,6],
+                        borderWidth:2,
 
-    align:"top",
-    anchor:"end",
-    offset:6,
+                        pointRadius:0,
+                        pointHoverRadius:5,
+                        pointHitRadius:20,
 
-    font:{
-        size:11,
-        weight:"bold"
-    },
+                        fill:false,
 
-    formatter:function(value){
+                        datalabels:{
+                            display:function(context){
+                                return context.dataIndex === valores.length - 1;
+                            },
 
-        return "Média: " +
-            value.toLocaleString("pt-BR", {
-                maximumFractionDigits:0
-            }) +
-            " L";
-   }
-  }
- ]   
-},
+                            align:"top",
+                            anchor:"end",
+                            offset:6,
+
+                            font:{
+                                size:11,
+                                weight:"bold"
+                            },
+
+                            formatter:function(value){
+
+                                return "Média: " +
+                                    value.toLocaleString("pt-BR", {
+                                        maximumFractionDigits:0
+                                    }) +
+                                    " L";
+                            }
+                        }
+                    }
+                ]
+            },
 
             options:{
+                responsive:true,
+                maintainAspectRatio:false,
 
-      responsive:true,
-      maintainAspectRatio:false,
+                interaction:{
+                    mode:"index",
+                    intersect:false,
+                    axis:"x"
+                },
 
-       interaction:{
-        mode:"index",
-        intersect:false,
-        axis:"x"
-       },
-                
-         layout:{
-             padding:{ bottom:20 } },
+                layout:{
+                    padding:{
+                        bottom:20
+                    }
+                },
 
                 scales:{
                     x:{
-                        grid:{ display:false },
-                        ticks:{ padding:15 } },
+                        grid:{
+                            display:false
+                        },
 
-                    y:{ beginAtZero:true } },
+                        ticks:{
+                            padding:15
+                        }
+                    },
 
-             plugins:{
-              legend:{ display:false },
+                    y:{
+                        beginAtZero:true
+                    }
+                },
+
+                plugins:{
+                    legend:{
+                        display:false
+                    },
 
                     tooltip:{
                         callbacks:{
+
                             title(context){
 
-                                const indice=context[0].dataIndex;
-                                const item=lista[indice];
+                                const indice = context[0].dataIndex;
+                                const item = lista[indice];
 
-                                if(anoSelecionado===""){
+                                if(anoSelecionado === ""){
 
-                                const periodos = {
-                                 Jan:"Jan - Mar",
-                                 Abr:"Abr - Jun",
-                                 Jul:"Jul - Set",
-                                 Out:"Out - Dez" };
-                                    
-                                return periodos[item.label] + " / " + item.ano;}
+                                    const periodos = {
+                                        Jan:"Jan - Mar",
+                                        Abr:"Abr - Jun",
+                                        Jul:"Jul - Set",
+                                        Out:"Out - Dez"
+                                    };
 
-                                const numeroMes=[
+                                    return periodos[item.label] + " / " + item.ano;
+                                }
+
+                                const numeroMes = [
                                     "Jan","Fev","Mar","Abr","Mai","Jun",
                                     "Jul","Ago","Set","Out","Nov","Dez"
                                 ].indexOf(item.label);
 
-                                return mesesCompletos[numeroMes]+" de "+item.ano; },
+                                return mesesCompletos[numeroMes] + " de " + item.ano;
+                            },
 
                             label(context){
 
-    const valor =
-        context.raw.toLocaleString("pt-BR", {
-            maximumFractionDigits:0
-        });
+                                const valor =
+                                    context.raw.toLocaleString("pt-BR", {
+                                        maximumFractionDigits:0
+                                    });
 
-    if(context.dataset.label === "Média"){
-        return "Média: " + valor + " L"; }
+                                if(context.dataset.label === "Média"){
+                                    return "Média: " + valor + " L";
+                                }
 
-    return "Litros: " + valor + " L"; }
-  }}}}});}
+                                return "Litros: " + valor + " L";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    );
+}
 
 
 /* =========================================
@@ -1245,11 +1267,17 @@ function criarGraficoSemanal(){
     const valores =
         calcularDadosSemanais(dias);
 
-    const totalSemana =
-    valores.reduce((total, valor) => total + valor, 0);
 
-document.getElementById("totalSemana").textContent =
-    totalSemana.toLocaleString("pt-BR") + " L";
+    const totalSemana =
+        valores.reduce(
+            (total, valor) => total + valor,
+            0
+        );
+
+    document
+        .getElementById("totalSemana")
+        .textContent =
+            totalSemana.toLocaleString("pt-BR") + " L";
 
 
     const labels =
@@ -1259,192 +1287,99 @@ document.getElementById("totalSemana").textContent =
 
 
     if(graficoSemanal){
-
         graficoSemanal.destroy();
-
     }
 
 
-    graficoSemanal =
-        new Chart(
-            document.getElementById("chartSemanal"),
-            {
+    graficoSemanal = new Chart(
+        document.getElementById("chartSemanal"),
+        {
+            type:"bar",
 
-                type:"bar",
+            data:{
+                labels:labels,
 
-                data:{
-
-                    labels:labels,
-
-                   datasets:[
-    {
-        label:"Litros abastecidos",
-        data:valores,
-        borderColor:"#29b6ff",
-        backgroundColor:"#29b6ff",
-        borderWidth:3,
-        tension:.35,
-        fill:false,
-
-        pointRadius:5,
-        pointHoverRadius:8,
-        pointHitRadius:18,
-
-        datalabels:{
-            color:"#ffffff",
-            textStrokeColor:"#000000",
-            textStrokeWidth:3,
-
-            align:"top",
-            anchor:"end",
-            offset:6,
-
-            font:{
-                size:11,
-                weight:"bold"
+                datasets:[
+                    {
+                        label:"Litros abastecidos",
+                        data:valores,
+                        borderWidth:1
+                    }
+                ]
             },
 
-            formatter:function(value){
-                return value.toLocaleString("pt-BR") + " L";
-            }
-        }
-    },
+            options:{
+                responsive:true,
+                maintainAspectRatio:false,
 
-    {
-        label:"Média",
-        data:Array(valores.length).fill(media),
-        borderColor:"#ff9800",
-        borderDash:[8,6],
-        borderWidth:2,
+                interaction:{
+                    mode:"index",
+                    intersect:false
+                },
 
-        pointRadius:0,
-        pointHoverRadius:5,
-        pointHitRadius:20,
-
-        fill:false,
-
-        datalabels:{
-            display:function(context){
-                return context.dataIndex === valores.length - 1;
-            },
-
-            color:"#ffffff",
-            textStrokeColor:"#000000",
-            textStrokeWidth:3,
-
-            align:"top",
-            anchor:"end",
-            offset:6,
-
-            font:{
-                size:11,
-                weight:"bold"
-            },
-
-            formatter:function(value){
-                return "Média: " +
-                    value.toLocaleString("pt-BR", {
-                        maximumFractionDigits:0
-                    }) +
-                    " L";
-            }
-        }
-    }
-]
-},
-
-options:{
-
-                    responsive:true,
-
-                    maintainAspectRatio:false,
-
-                    scales:{
-
-                        y:{
-                            beginAtZero:true
-                        },
-
-                        x:{
-                            grid:{
-                                display:false
-                            }
-                        }
-
+                scales:{
+                    y:{
+                        beginAtZero:true
                     },
 
-                    plugins:{
-
-                        legend:{
+                    x:{
+                        grid:{
                             display:false
-                        },
+                        }
+                    }
+                },
 
-                        tooltip:{
+                plugins:{
+                    legend:{
+                        display:false
+                    },
 
-                            callbacks:{
+                    tooltip:{
+                        callbacks:{
 
-                                title(context){
+                            title(context){
 
-                                    const indice =
-                                        context[0].dataIndex;
+                                const indice =
+                                    context[0].dataIndex;
 
-                                    return dias[indice]
-                                        .toLocaleDateString(
-                                            "pt-BR"
-                                        );
-
-                                },
-
-                                label(context){
-
-                                    return (
-                                        context.raw.toLocaleString(
-                                            "pt-BR"
-                                        ) + " L"
-                                    );
-
-                                }
-
-                            }
-
-                        },
-
-                        datalabels:{
-
-                            anchor:"end",
-
-                            align:"top",
-
-                            font:{
-                                weight:"bold",
-                                size:11
+                                return dias[indice]
+                                    .toLocaleDateString("pt-BR");
                             },
 
-                            formatter(value){
+                            label(context){
 
-                                if(value === 0){
-                                    return "";
-                                }
+                                return context.raw
+                                    .toLocaleString("pt-BR") +
+                                    " L";
+                            }
+                        }
+                    },
 
-                                return (
-                                    value.toLocaleString(
-                                        "pt-BR"
-                                    ) + " L"
-                                );
+                    datalabels:{
+                        anchor:"end",
+                        align:"top",
 
+                        font:{
+                            weight:"bold",
+                            size:11
+                        },
+
+                        formatter(value){
+
+                            if(value === 0){
+                                return "";
                             }
 
+                            return value
+                                .toLocaleString("pt-BR") +
+                                " L";
                         }
-
                     }
-
                 }
-
             }
-        );
-
+        }
+    );
 }
-
 
 /* Filtro exclusivo do gráfico semanal */
 document
