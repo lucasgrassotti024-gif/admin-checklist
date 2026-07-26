@@ -263,6 +263,30 @@ h1{
     height:430px!important;
 }
 
+.total-semana-card{
+    display:flex;
+    align-items:center;
+    margin-bottom:18px;
+    padding:14px 18px;
+    border-radius:12px;
+    background:linear-gradient(135deg,var(--primary),var(--accent));
+    color:#fff;
+    box-shadow:0 4px 14px rgba(0,120,255,.22);
+}
+
+.total-semana-card small{
+    display:block;
+    font-size:12px;
+    opacity:.85;
+    margin-bottom:3px;
+}
+
+.total-semana-card strong{
+    display:block;
+    font-size:24px;
+    font-weight:800;
+}
+    
 footer{
     text-align:center;
     padding:14px;
@@ -401,7 +425,9 @@ Limpar filtro
 
 <div class="card">
 
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+    <div class="card">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
 
         <h3>📅 Consumo semanal</h3>
 
@@ -409,6 +435,13 @@ Limpar filtro
             <option value="">Selecione a semana</option>
         </select>
 
+    </div>
+
+    <div class="total-semana-card">
+        <div>
+            <small>Total abastecido na semana</small>
+            <strong id="totalSemana">0 L</strong>
+        </div>
     </div>
 
     <canvas id="chartSemanal"></canvas>
@@ -731,96 +764,78 @@ function criarGraficoVeiculos(dados){
     borderWidth:2,
     pointRadius:0,
     fill:false,
-    datalabels:{
-        display:false
-    }
-}
-]   
+datalabels:{
 
-            },
+    display:function(context){
+
+        return context.dataIndex === valores.length - 1;
+
+    },
+
+    align:"top",
+    anchor:"end",
+    offset:6,
+
+    font:{
+        size:11,
+        weight:"bold"
+    },
+
+    formatter:function(value){
+
+        return "Média: " +
+            value.toLocaleString("pt-BR", {
+                maximumFractionDigits:0
+            }) +
+            " L";
+    }}}]   },
 
             options:{
 
-                responsive:true,
-
-                maintainAspectRatio:false,
-
-                layout:{
-                    padding:{
-                        bottom:20
-                    }
-                },
+      responsive:true,
+      maintainAspectRatio:false,
+         layout:{
+             padding:{ bottom:20 } },
 
                 scales:{
-
                     x:{
+                        grid:{ display:false },
+                        ticks:{ padding:15 } },
 
-                        grid:{
-                            display:false
-                        },
+                    y:{ beginAtZero:true } },
 
-                        ticks:{
-                            padding:15
-                        }
-
-                    },
-
-                    y:{
-                        beginAtZero:true
-                    }
-
-                },
-
-                plugins:{
-
-                    legend:{
-                        display:false
-                    },
+             plugins:{
+              legend:{ display:false },
 
                     tooltip:{
-
                         callbacks:{
-
                             title(context){
 
                                 const indice=context[0].dataIndex;
-
                                 const item=lista[indice];
 
                                 if(anoSelecionado===""){
-
-                                    return item.label+" / "+item.ano;
-
-                                }
+                                    return item.label+" / "+item.ano; }
 
                                 const numeroMes=[
                                     "Jan","Fev","Mar","Abr","Mai","Jun",
                                     "Jul","Ago","Set","Out","Nov","Dez"
                                 ].indexOf(item.label);
 
-                                return mesesCompletos[numeroMes]+" de "+item.ano;
-
-                            },
+                                return mesesCompletos[numeroMes]+" de "+item.ano; },
 
                             label(context){
 
-                                return "Litros: "+context.raw.toLocaleString("pt-BR")+" L";
+    const valor =
+        context.raw.toLocaleString("pt-BR", {
+            maximumFractionDigits:0
+        });
 
-                            }
+    if(context.dataset.label === "Média"){
+        return "Média: " + valor + " L"; }
 
-                        }
-
-                    }
-
-                }
-
-            }
-
-        }
-
-    );
-
-}
+    return "Litros: " + valor + " L"; }
+  }}}}});}
 
 
 /* =========================================
@@ -1182,6 +1197,12 @@ function criarGraficoSemanal(){
 
     const valores =
         calcularDadosSemanais(dias);
+
+    const totalSemana =
+    valores.reduce((total, valor) => total + valor, 0);
+
+document.getElementById("totalSemana").textContent =
+    totalSemana.toLocaleString("pt-BR") + " L";
 
 
     const labels =
