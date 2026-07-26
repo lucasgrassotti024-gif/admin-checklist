@@ -488,8 +488,9 @@ let semanaSelecionada = "";
         console.log("Quantidade de documentos:", snap.size);
         console.log(abastecimentos);
 
-        preencherFiltroAno();
-        atualizarDashboard();
+      preencherFiltroAno();
+      atualizarDashboard();
+      iniciarGraficoSemanal();
 
     }catch(err){
 
@@ -500,94 +501,6 @@ let semanaSelecionada = "";
 }
 
 
-function preencherFiltroSemanas(){
-
-    const select = document.getElementById("filtroSemana");
-
-    const valorAtual = semanaSelecionada;
-
-    select.innerHTML = '<option value="">Selecione a semana</option>';
-
-    const semanas = [];
-
-    abastecimentos.forEach(item => {
-
-        if(!item.data) return;
-
-        const data = new Date(item.data);
-
-        if(isNaN(data.getTime())) return;
-
-        const diaSemana = data.getDay();
-
-        const diasAteSegunda =
-            diaSemana === 0
-                ? -6
-                : 1 - diaSemana;
-
-        const inicioSemana = new Date(data);
-
-        inicioSemana.setDate(
-            data.getDate() + diasAteSegunda
-        );
-
-        inicioSemana.setHours(0,0,0,0);
-
-        const ano = inicioSemana.getFullYear();
-
-        const mes = String(
-            inicioSemana.getMonth() + 1
-        ).padStart(2,"0");
-
-        const dia = String(
-            inicioSemana.getDate()
-        ).padStart(2,"0");
-
-        const chave = `${ano}-${mes}-${dia}`;
-
-        if(!semanas.some(s => s.valor === chave)){
-
-            const fimSemana = new Date(inicioSemana);
-
-            fimSemana.setDate(
-                fimSemana.getDate() + 6
-            );
-
-            semanas.push({
-
-                valor: chave,
-
-                texto:
-                    inicioSemana.toLocaleDateString("pt-BR") +
-                    " até " +
-                    fimSemana.toLocaleDateString("pt-BR")
-
-            });
-
-        }
-
-    });
-
-    semanas.sort(
-        (a,b) => b.valor.localeCompare(a.valor)
-    );
-
-    semanas.forEach(semana => {
-
-        const option = document.createElement("option");
-
-        option.value = semana.valor;
-        option.textContent = semana.texto;
-
-        if(semana.valor === valorAtual){
-            option.selected = true;
-        }
-
-        select.appendChild(option);
-
-    });
-
-}
 
     function preencherFiltroAno(){
     const select = document.getElementById("filtroAno");
@@ -610,9 +523,6 @@ function atualizarDashboard(){
     atualizarCard(dados);
     criarGraficoVeiculos(dados);
     criarGraficoTemporal(dados);
-
-    preencherFiltroSemanas();
-    criarGraficoSemanal();
 
 }
 
@@ -886,118 +796,514 @@ function criarGraficoVeiculos(dados){
 }
 
 
-function criarGraficoSemanal(){
+/* =========================================
+   GRÁFICO SEMANAL
+   Independente dos filtros do dashboard
+========================================= */
 
-    if(graficoSemanal){
-        graficoSemanal.destroy();
-        graficoSemanal = null;
+const nomesDiasSemana = [
+    "Domingo",
+    "Segunda",
+    "Terça",
+    "Quarta",
+    "Quinta",
+    "Sexta",
+    "Sábado"
+];
+
+const nomesMesesAbrev = [
+    "Jan", "Fev", "Mar", "Abr",
+    "Mai", "Jun", "Jul", "Ago",
+    "Set", "Out", "Nov", "Dez"
+];
+
+
+/* Converte qualquer data para o começo do dia */
+function inicioDoDia(data){
+
+    const d = new Date(data);
+
+    d.setHours(0, 0, 0, 0);
+
+    return d;
+}
+
+
+/* Número da semana do ano:
+   Semana 1 = 01/01 até 07/01
+   Semana 2 = 08/01 até 14/01
+   etc.
+*/
+function numeroSemanaDoAno(data){
+
+    const d = inicioDoDia(data);
+
+    const primeiroDiaAno =
+        new Date(d.getFullYear(), 0, 1);
+
+    primeiroDiaAno.setHours(0, 0, 0, 0);
+
+    const diferenca =
+        d.getTime() - primeiroDiaAno.getTime();
+
+    const diasPassados =
+        Math.floor(diferenca / 86400000);
+
+    return Math.floor(diasPassados / 7) + 1;
+}
+
+
+/* Retorna início e fim de uma Semana X */
+function intervaloSemana(numeroSemana, ano){
+
+    const inicio =
+        new Date(ano, 0, 1);
+
+    inicio.setDate(
+        inicio.getDate() + ((numeroSemana - 1) * 7)
+    );
+
+    inicio.setHours(0, 0, 0, 0);
+
+
+    const fim =
+        new Date(inicio);
+
+    fim.setDate(fim.getDate() + 6);
+
+    fim.setHours(23, 59, 59, 999);
+
+
+    return {
+        inicio,
+        fim
+    };
+}
+
+
+/* Nome do mês da semana.
+   Exemplo:
+   Jan
+   Jan/Fev
+*/
+function mesDaSemana(inicio, fim){
+
+    const mesInicio =
+        nomesMesesAbrev[inicio.getMonth()];
+
+    const mesFim =
+        nomesMesesAbrev[fim.getMonth()];
+
+
+    if(mesInicio === mesFim){
+        return mesInicio;
     }
 
-    // Enquanto nenhuma semana estiver selecionada,
-    // o gráfico fica vazio
-    if(!semanaSelecionada){
-        return;
+    return mesInicio + "/" + mesFim;
+}
+
+
+/* Preenche o filtro do gráfico semanal */
+function preencherFiltroSemanal(){
+
+    const select =
+        document.getElementById("filtroSemana");
+
+    const hoje =
+        inicioDoDia(new Date());
+
+    const anoAtual =
+        hoje.getFullYear();
+
+    const semanaAtual =
+        numeroSemanaDoAno(hoje);
+
+
+    select.innerHTML = "";
+
+
+    /* ATUAL */
+    const intervaloAtual =
+        intervaloSemana(semanaAtual, anoAtual);
+
+    const optionAtual =
+        document.createElement("option");
+
+    optionAtual.value = "atual";
+
+    optionAtual.textContent =
+        `Atual — Semana ${semanaAtual} - ${
+            mesDaSemana(
+                intervaloAtual.inicio,
+                intervaloAtual.fim
+            )
+        }`;
+
+    select.appendChild(optionAtual);
+
+
+    /* Semanas anteriores:
+       mais recente em cima,
+       mais antiga embaixo.
+       
+       A semana atual não é repetida porque
+       já aparece como "Atual".
+    */
+    for(
+        let numero = semanaAtual - 1;
+        numero >= 1;
+        numero--
+    ){
+
+        const intervalo =
+            intervaloSemana(numero, anoAtual);
+
+        const option =
+            document.createElement("option");
+
+        option.value =
+            String(numero);
+
+        option.textContent =
+            `Semana ${numero} - ${
+                mesDaSemana(
+                    intervalo.inicio,
+                    intervalo.fim
+                )
+            }`;
+
+        select.appendChild(option);
+
     }
 
-    const inicioSemana = new Date(semanaSelecionada + "T00:00:00");
 
-    const fimSemana = new Date(inicioSemana);
-    fimSemana.setDate(fimSemana.getDate() + 6);
-    fimSemana.setHours(23,59,59,999);
+    select.value = "atual";
+}
 
-    const totais = [0,0,0,0,0,0,0];
 
-    abastecimentos.forEach(item=>{
+/* Cria as 7 datas que serão mostradas */
+function obterDiasGraficoSemanal(){
 
-        if(!item.data) return;
+    const hoje =
+        inicioDoDia(new Date());
 
-        const data = new Date(item.data);
 
-        if(data < inicioSemana || data > fimSemana){
+    /* =====================
+       ATUAL
+       Últimos 7 dias
+       terminando hoje
+    ===================== */
+
+    if(
+        semanaSelecionada === "atual" ||
+        !semanaSelecionada
+    ){
+
+        const dias = [];
+
+        for(let i = 6; i >= 0; i--){
+
+            const data =
+                new Date(hoje);
+
+            data.setDate(
+                hoje.getDate() - i
+            );
+
+            data.setHours(0, 0, 0, 0);
+
+            dias.push(data);
+
+        }
+
+        return dias;
+
+    }
+
+
+    /* =====================
+       SEMANA HISTÓRICA
+       7 dias da Semana X
+    ===================== */
+
+    const numero =
+        Number(semanaSelecionada);
+
+    const ano =
+        hoje.getFullYear();
+
+    const intervalo =
+        intervaloSemana(numero, ano);
+
+    const dias = [];
+
+    for(let i = 0; i < 7; i++){
+
+        const data =
+            new Date(intervalo.inicio);
+
+        data.setDate(
+            intervalo.inicio.getDate() + i
+        );
+
+        data.setHours(0, 0, 0, 0);
+
+        dias.push(data);
+
+    }
+
+    return dias;
+}
+
+
+/* Converte a data do Firestore/HTML para data local */
+function obterDataAbastecimento(valor){
+
+    if(!valor){
+        return null;
+    }
+
+
+    /* Firestore Timestamp */
+    if(
+        typeof valor === "object" &&
+        typeof valor.toDate === "function"
+    ){
+
+        return inicioDoDia(valor.toDate());
+
+    }
+
+
+    /* Campo YYYY-MM-DD */
+    if(
+        typeof valor === "string" &&
+        /^\d{4}-\d{2}-\d{2}$/.test(valor)
+    ){
+
+        const partes =
+            valor.split("-");
+
+        return new Date(
+            Number(partes[0]),
+            Number(partes[1]) - 1,
+            Number(partes[2])
+        );
+
+    }
+
+
+    const data =
+        new Date(valor);
+
+
+    if(isNaN(data.getTime())){
+        return null;
+    }
+
+
+    return inicioDoDia(data);
+}
+
+
+/* Soma os abastecimentos dos 7 dias */
+function calcularDadosSemanais(dias){
+
+    const valores =
+        Array(7).fill(0);
+
+
+    abastecimentos.forEach(item => {
+
+        const dataItem =
+            obterDataAbastecimento(item.data);
+
+        if(!dataItem){
             return;
         }
 
-        const indiceDia = Math.floor(
-            (data - inicioSemana) / (1000 * 60 * 60 * 24)
-        );
 
-        if(indiceDia >= 0 && indiceDia <= 6){
-            totais[indiceDia] += Number(item.quantidadeAbastecida || 0);
-        }
+        dias.forEach((dia, indice) => {
+
+            if(
+                dataItem.getFullYear() === dia.getFullYear() &&
+                dataItem.getMonth() === dia.getMonth() &&
+                dataItem.getDate() === dia.getDate()
+            ){
+
+                valores[indice] +=
+                    Number(
+                        item.quantidadeAbastecida || 0
+                    );
+
+            }
+
+        });
 
     });
 
-    const labels = [
-        "Segunda",
-        "Terça",
-        "Quarta",
-        "Quinta",
-        "Sexta",
-        "Sábado",
-        "Domingo"
-    ];
 
-    graficoSemanal = new Chart(
-        document.getElementById("chartSemanal"),
-        {
-            type:"bar",
+    return valores;
+}
 
-            data:{
-                labels:labels,
 
-                datasets:[{
-                    label:"Litros abastecidos",
-                    data:totais,
-                    borderWidth:1
-                }]
-            },
+/* Desenha o gráfico */
+function criarGraficoSemanal(){
 
-            options:{
-                responsive:true,
-                maintainAspectRatio:false,
+    const dias =
+        obterDiasGraficoSemanal();
 
-                scales:{
-                    y:{
-                        beginAtZero:true
-                    },
+    const valores =
+        calcularDadosSemanais(dias);
 
-                    x:{
-                        grid:{
-                            display:false
-                        }
-                    }
+
+    const labels =
+        dias.map(data =>
+            nomesDiasSemana[data.getDay()]
+        );
+
+
+    if(graficoSemanal){
+
+        graficoSemanal.destroy();
+
+    }
+
+
+    graficoSemanal =
+        new Chart(
+            document.getElementById("chartSemanal"),
+            {
+
+                type:"bar",
+
+                data:{
+
+                    labels:labels,
+
+                    datasets:[{
+                        label:"Litros abastecidos",
+                        data:valores,
+                        borderWidth:1
+                    }]
+
                 },
 
-                plugins:{
-                    legend:{
-                        display:false
-                    },
+                options:{
 
-                    tooltip:{
-                        callbacks:{
-                            label(context){
-                                return context.raw.toLocaleString("pt-BR") + " L";
-                            }
-                        }
-                    },
+                    responsive:true,
 
-                    datalabels:{
-                        anchor:"end",
-                        align:"top",
-                        font:{
-                            weight:"bold",
-                            size:11
+                    maintainAspectRatio:false,
+
+                    scales:{
+
+                        y:{
+                            beginAtZero:true
                         },
 
-                        formatter(value){
-                            if(value === 0) return "";
-                            return value.toLocaleString("pt-BR") + " L";
+                        x:{
+                            grid:{
+                                display:false
+                            }
                         }
+
+                    },
+
+                    plugins:{
+
+                        legend:{
+                            display:false
+                        },
+
+                        tooltip:{
+
+                            callbacks:{
+
+                                title(context){
+
+                                    const indice =
+                                        context[0].dataIndex;
+
+                                    return dias[indice]
+                                        .toLocaleDateString(
+                                            "pt-BR"
+                                        );
+
+                                },
+
+                                label(context){
+
+                                    return (
+                                        context.raw.toLocaleString(
+                                            "pt-BR"
+                                        ) + " L"
+                                    );
+
+                                }
+
+                            }
+
+                        },
+
+                        datalabels:{
+
+                            anchor:"end",
+
+                            align:"top",
+
+                            font:{
+                                weight:"bold",
+                                size:11
+                            },
+
+                            formatter(value){
+
+                                if(value === 0){
+                                    return "";
+                                }
+
+                                return (
+                                    value.toLocaleString(
+                                        "pt-BR"
+                                    ) + " L"
+                                );
+
+                            }
+
+                        }
+
                     }
+
                 }
+
             }
-        }
-    );
+        );
+
+}
+
+
+/* Filtro exclusivo do gráfico semanal */
+document
+    .getElementById("filtroSemana")
+    .addEventListener("change", e => {
+
+        semanaSelecionada =
+            e.target.value;
+
+        criarGraficoSemanal();
+
+    });
+
+
+/* Inicializa o gráfico */
+function iniciarGraficoSemanal(){
+
+    semanaSelecionada = "atual";
+
+    preencherFiltroSemanal();
+
+    criarGraficoSemanal();
+
 }
     
 document.getElementById("filtroAno").addEventListener("change",e=>{
@@ -1007,11 +1313,6 @@ document.getElementById("filtroAno").addEventListener("change",e=>{
 document.getElementById("filtroMes").addEventListener("change",e=>{
     mesSelecionado = e.target.value;
     atualizarDashboard();});
-
-document.getElementById("filtroSemana").addEventListener("change", e => {
-
-    semanaSelecionada = e.target.value;
-    criarGraficoSemanal();});
 
 document.getElementById("limparFiltro").onclick=()=>{
     placaSelecionada="";
