@@ -846,6 +846,121 @@ function criarGraficoVeiculos(dados){
     );
 
 }
+
+
+function criarGraficoSemanal(){
+
+    if(graficoSemanal){
+        graficoSemanal.destroy();
+        graficoSemanal = null;
+    }
+
+    // Enquanto nenhuma semana estiver selecionada,
+    // o gráfico fica vazio
+    if(!semanaSelecionada){
+        return;
+    }
+
+    const inicioSemana = new Date(semanaSelecionada + "T00:00:00");
+
+    const fimSemana = new Date(inicioSemana);
+    fimSemana.setDate(fimSemana.getDate() + 6);
+    fimSemana.setHours(23,59,59,999);
+
+    const totais = [0,0,0,0,0,0,0];
+
+    abastecimentos.forEach(item=>{
+
+        if(!item.data) return;
+
+        const data = new Date(item.data);
+
+        if(data < inicioSemana || data > fimSemana){
+            return;
+        }
+
+        const indiceDia = Math.floor(
+            (data - inicioSemana) / (1000 * 60 * 60 * 24)
+        );
+
+        if(indiceDia >= 0 && indiceDia <= 6){
+            totais[indiceDia] += Number(item.quantidadeAbastecida || 0);
+        }
+
+    });
+
+    const labels = [
+        "Segunda",
+        "Terça",
+        "Quarta",
+        "Quinta",
+        "Sexta",
+        "Sábado",
+        "Domingo"
+    ];
+
+    graficoSemanal = new Chart(
+        document.getElementById("chartSemanal"),
+        {
+            type:"bar",
+
+            data:{
+                labels:labels,
+
+                datasets:[{
+                    label:"Litros abastecidos",
+                    data:totais,
+                    borderWidth:1
+                }]
+            },
+
+            options:{
+                responsive:true,
+                maintainAspectRatio:false,
+
+                scales:{
+                    y:{
+                        beginAtZero:true
+                    },
+
+                    x:{
+                        grid:{
+                            display:false
+                        }
+                    }
+                },
+
+                plugins:{
+                    legend:{
+                        display:false
+                    },
+
+                    tooltip:{
+                        callbacks:{
+                            label(context){
+                                return context.raw.toLocaleString("pt-BR") + " L";
+                            }
+                        }
+                    },
+
+                    datalabels:{
+                        anchor:"end",
+                        align:"top",
+                        font:{
+                            weight:"bold",
+                            size:11
+                        },
+
+                        formatter(value){
+                            if(value === 0) return "";
+                            return value.toLocaleString("pt-BR") + " L";
+                        }
+                    }
+                }
+            }
+        }
+    );
+}
     
 document.getElementById("filtroAno").addEventListener("change",e=>{
     anoSelecionado = e.target.value;
@@ -854,6 +969,11 @@ document.getElementById("filtroAno").addEventListener("change",e=>{
 document.getElementById("filtroMes").addEventListener("change",e=>{
     mesSelecionado = e.target.value;
     atualizarDashboard();});
+
+document.getElementById("filtroSemana").addEventListener("change", e => {
+
+    semanaSelecionada = e.target.value;
+    criarGraficoSemanal();});
 
 document.getElementById("limparFiltro").onclick=()=>{
     placaSelecionada="";
